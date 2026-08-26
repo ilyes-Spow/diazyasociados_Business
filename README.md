@@ -74,17 +74,61 @@ veces. **Mientras la variable no exista, la función no hace nada.**
 
 ---
 
-## Despliegue en Netlify
+## Desplegar en tu propia cuenta de Netlify
 
 No hay proceso de compilación: es un sitio estático que se sirve tal cual.
+`netlify.toml` ya trae la configuración, así que no hay que rellenar nada.
+
+### Opción A · Arrastrar y soltar (2 minutos, sin GitHub)
+
+1. Descarga el proyecto como ZIP y descomprímelo.
+2. Entra en [app.netlify.com/drop](https://app.netlify.com/drop) con tu cuenta.
+3. Arrastra **la carpeta descomprimida** (no el ZIP).
+4. Netlify te da una dirección del tipo `nombre-aleatorio.netlify.app`.
+5. En **Site configuration → Change site name**, ponle el nombre que quieras.
+
+Para actualizarlo más adelante: **Deploys → Deploy manually** y vuelves a
+arrastrar la carpeta.
+
+### Opción B · Conectado a Git (recomendada a medio plazo)
+
+Cada cambio que subas se publica solo.
 
 1. En Netlify: **Add new site → Import an existing project**.
-2. Conecta este repositorio y la rama correspondiente.
-3. Deja el comando de compilación vacío y el directorio de publicación en `.`
-   (ya viene definido en `netlify.toml`).
-4. Opcional pero recomendado: añade la variable `SITE_PASSWORD`.
+2. Elige el proveedor (GitHub, GitLab o Bitbucket) y autoriza tu cuenta.
+3. Selecciona este repositorio y la rama.
+4. Deja el comando de compilación **vacío** y el directorio de publicación
+   en `.` (Netlify lo lee de `netlify.toml`).
+5. **Deploy site**.
 
 Cada `git push` a la rama conectada vuelve a desplegar automáticamente.
+
+### Después de desplegar, en cualquiera de las dos opciones
+
+- **Nombre del sitio**: Site configuration → Change site name.
+- **Dominio propio** (por ejemplo `formacion.diazyasociados.es`):
+  Domain management → Add a domain. El certificado HTTPS es automático.
+- **Clave en servidor** (recomendado): Site configuration →
+  Environment variables → `SITE_PASSWORD`. Ver el apartado de Acceso.
+
+---
+
+## Versión en un solo archivo
+
+Para enviar la plataforma por correo, llevarla en un USB o abrirla a doble
+clic sin servidor:
+
+```bash
+node herramientas/empaquetar.mjs
+```
+
+Genera `dist/formacion-diazyasociados.html`, un único archivo con todo
+incrustado (estilos, contenidos, imágenes y lógica). No lleva dependencias
+y funciona sin conexión.
+
+> El `index.html` normal **necesita un servidor** porque usa módulos ES: si lo
+> abres a doble clic desde el disco, el navegador bloquea la carga. La versión
+> de un solo archivo no tiene ese problema.
 
 ---
 
@@ -194,6 +238,8 @@ cerrada.
 │       ├── estado.js              Sesión, tema y progreso
 │       └── markdown.js            Renderizador de Markdown
 ├── content/                       Contenidos editables
+├── herramientas/
+│   └── empaquetar.mjs             Genera la versión en un solo archivo
 └── netlify/edge-functions/
     └── acceso.ts                  Puerta de acceso en servidor (opcional)
 ```

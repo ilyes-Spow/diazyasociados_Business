@@ -80,6 +80,12 @@ export const tema = {
   actual() {
     const guardado = leer(K.tema, null);
     if (guardado === 'claro' || guardado === 'oscuro') return guardado;
+
+    // Si el contenedor impone un tema (data-theme), se respeta.
+    const anfitrion = document.documentElement.getAttribute('data-theme');
+    if (anfitrion === 'dark') return 'oscuro';
+    if (anfitrion === 'light') return 'claro';
+
     const prefiereOscuro = typeof matchMedia === 'function' &&
       matchMedia('(prefers-color-scheme: dark)').matches;
     return prefiereOscuro ? 'oscuro' : 'claro';
