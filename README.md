@@ -32,6 +32,8 @@ procedimientos y normativa.
 - **Tema claro y oscuro**, respetando la preferencia del sistema.
 - **Diseño adaptable** a móvil, tablet y escritorio.
 - **Impresión** de módulos en formato limpio.
+- **Vídeos** de YouTube, Vimeo, Loom o archivos propios, con carga diferida.
+- **Panel de administración local** para editar contenidos sin tocar código.
 
 ---
 
@@ -54,6 +56,7 @@ recargar el navegador tras cada cambio.
 |---|---|
 | `npm run dev` | Levanta el servidor local en el puerto 8099 |
 | `npm run dev -- --puerto 3000` | Lo levanta en otro puerto |
+| `npm run admin` | Abre el panel de administración en el puerto 8100 |
 | `npm run validar` | Comprueba que los contenidos están bien formados |
 | `npm run empaquetar` | Genera la versión en un solo archivo |
 | `npm run clave -- "NuevaClave"` | Calcula la huella de una clave nueva |
@@ -168,6 +171,57 @@ y funciona sin conexión.
 > El `index.html` normal **necesita un servidor** porque usa módulos ES: si lo
 > abres a doble clic desde el disco, el navegador bloquea la carga. La versión
 > de un solo archivo no tiene ese problema.
+
+---
+
+## Panel de administración
+
+Una interfaz para crear y editar contenidos sin tocar código:
+
+```bash
+npm run admin
+```
+
+Abre `http://localhost:8100`. Permite:
+
+- Crear, editar, reordenar y borrar **módulos y lecciones**, con vista previa en
+  vivo mientras escribes.
+- Publicar **novedades**, con fecha, nivel y etiquetas.
+- Gestionar los **grupos** temáticos y su orden.
+- Subir **vídeos** propios y generar el bloque para YouTube, Vimeo o Loom.
+
+### Qué hace y qué no
+
+El panel **escribe los archivos de `content/`** y nada más. No publica: los
+cambios quedan en tu equipo hasta que hagas `git commit` y `git push`. Esto es
+deliberado, porque significa que:
+
+- Todo cambio pasa por git y queda revisable con `git diff`.
+- Cualquier error se deshace con `git checkout`.
+- No hace falta base de datos, ni servidor, ni cuentas de usuario.
+
+Antes de sobrescribir un archivo guarda una copia en `.copias-admin/`
+(fuera del control de versiones, con las 300 más recientes).
+
+### Flujo recomendado
+
+```bash
+npm run admin          # editar en el navegador y pulsar Guardar
+npm run validar        # comprobar que todo está bien formado
+git diff               # revisar qué ha cambiado exactamente
+git add . && git commit -m "Actualizar el módulo de herencias"
+git push               # Netlify redespliega solo
+```
+
+> El panel solo escucha en `127.0.0.1`, así que no es accesible desde la red
+> local ni desde internet. Escribe archivos en tu proyecto: no lo expongas.
+
+### Numeración y orden
+
+No hace falta llevar la cuenta de los números de módulo. Al guardar, el panel
+recorre los grupos en su orden, renumera los módulos de forma correlativa,
+renombra los archivos y reescribe `curriculo.js`. Así los grupos siempre quedan
+seguidos y la numeración nunca se descoloca.
 
 ---
 
@@ -302,6 +356,9 @@ cerrada.
 ├── content/                       Contenidos editables
 ├── herramientas/
 │   ├── servidor.mjs               Servidor de desarrollo local
+│   ├── admin.mjs                  Panel de administración
+│   ├── admin/                     Interfaz del panel
+│   ├── contenido.mjs              Lectura y escritura de content/
 │   ├── validar.mjs                Comprobación de los contenidos
 │   ├── empaquetar.mjs             Genera la versión en un solo archivo
 │   └── clave.mjs                  Calcula la huella de una clave nueva

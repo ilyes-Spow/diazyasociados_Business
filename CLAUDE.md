@@ -7,6 +7,7 @@ módulos ES.
 ## Comandos
 
 - `npm run dev` — servidor local en el puerto 8099
+- `npm run admin` — panel de administración en el puerto 8100
 - `npm run validar` — comprueba la integridad de los contenidos (**ejecutar antes de cada commit**)
 - `npm run empaquetar` — genera `dist/formacion-diazyasociados.html`, versión de un solo archivo
 - `npm run clave -- "Clave"` — calcula la huella SHA-256 de una clave de acceso
@@ -23,6 +24,12 @@ módulos ES.
   delegación de eventos sobre `#vista`.
 - `assets/js/estado.js` encapsula todo el acceso a `localStorage`, tolerante a
   fallos (navegación privada, almacenamiento lleno).
+- `herramientas/contenido.mjs` lee `content/` importando los módulos reales y
+  los vuelve a serializar con el mismo formato. Es la pieza que usa el panel:
+  cualquier cambio en el formato de los archivos de contenido tiene que
+  reflejarse aquí, y comprobarse con un ciclo de ida y vuelta.
+- `herramientas/admin.mjs` sirve el panel y expone la API local. Escucha solo
+  en 127.0.0.1 y valida todo lo recibido antes de escribir nada.
 
 ## Convenciones
 

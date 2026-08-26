@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="es" data-tema="claro">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Panel · Formación Díaz y Asociados</title>
+<link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/panel/panel.css">
+</head>
+<body>
+
+<header class="barra">
+  <div class="barra__marca">
+    <img src="/assets/img/logo.svg" alt="" width="30" height="30">
+    <div>
+      <strong>Panel de contenidos</strong>
+      <small>Díaz y Asociados · formación interna</small>
+    </div>
+  </div>
+
+  <nav class="pestanas" id="pestanas">
+    <button class="pestana pestana--activa" data-vista="modulos">Módulos</button>
+    <button class="pestana" data-vista="novedades">Novedades</button>
+    <button class="pestana" data-vista="videos">Vídeos</button>
+    <button class="pestana" data-vista="grupos">Grupos</button>
+    <button class="pestana" data-vista="ayuda">Ayuda</button>
+  </nav>
+
+  <div class="barra__acciones">
+    <span class="estado" id="estado-git"></span>
+    <span class="estado estado--cambios" id="estado-cambios" hidden>Sin guardar</span>
+    <button class="btn btn--sutil" id="btn-descartar" hidden>Descartar</button>
+    <button class="btn btn--primario" id="btn-guardar" disabled>Guardar cambios</button>
+  </div>
+</header>
+
+<main id="lienzo" class="lienzo">
+  <p class="cargando">Cargando contenidos…</p>
+</main>
+
+<div class="aviso" id="aviso" role="status" aria-live="polite" hidden></div>
+
+<dialog class="dialogo" id="dialogo">
+  <h2 id="dialogo-tit"></h2>
+  <div id="dialogo-cuerpo"></div>
+  <div class="dialogo__pie">
+    <button class="btn btn--secundario" id="dialogo-no">Cancelar</button>
+    <button class="btn btn--peligro" id="dialogo-si">Confirmar</button>
+  </div>
+</dialog>
+
+<script type="module" src="/panel/panel.js"></script>
+</body>
+</html>

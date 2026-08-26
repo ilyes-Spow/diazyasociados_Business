@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "node herramientas/servidor.mjs",
+    "admin": "node herramientas/admin.mjs",
     "validar": "node herramientas/validar.mjs",
     "empaquetar": "node herramientas/empaquetar.mjs",
     "clave": "node herramientas/clave.mjs"
