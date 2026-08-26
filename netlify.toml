@@ -1,0 +1,39 @@
+# ===============================================================
+# Díaz y Asociados · Plataforma de formación interna
+# Configuración de despliegue en Netlify
+# ===============================================================
+
+[build]
+  publish = "."
+  command = ""
+
+# Función de borde que protege TODO el sitio con una clave validada
+# en servidor. Permanece inactiva mientras no exista la variable de
+# entorno SITE_PASSWORD (ver README).
+[[edge_functions]]
+  path = "/*"
+  function = "acceso"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "SAMEORIGIN"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=(), interest-cohort=()"
+    X-Robots-Tag = "noindex, nofollow, noarchive"
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=3600, must-revalidate"
+
+[[headers]]
+  for = "/content/*"
+  [headers.values]
+    Cache-Control = "public, max-age=300, must-revalidate"
+
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "no-cache"
