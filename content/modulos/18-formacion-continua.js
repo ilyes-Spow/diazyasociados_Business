@@ -35,6 +35,18 @@ Cursos, seminarios y jornadas. El despacho apoya la formación relacionada con e
 Sesiones del propio equipo. La persona que ha llevado un asunto complejo o ha aprendido una herramienta lo comparte con el resto.
 
 Formato recomendado: 30 minutos, una vez al mes, un tema, quien lo domina lo explica.
+Las sesiones se graban y se publican aquí, para quien no pudiera asistir y para
+las incorporaciones futuras.
+
+:::video
+https://www.youtube.com/watch?v=aqz-KE-bpKQ
+Sesión interna de ejemplo
+:::
+
+> [!PENDIENTE] Sustituir por la grabación real de la primera sesión interna.
+> Las grabaciones se suben a YouTube **como no listadas** o a Vimeo con
+> contraseña: nunca públicas, porque pueden contener referencias a asuntos.
+
 
 ### 4. Esta plataforma
 El conocimiento operativo del despacho. Se actualiza continuamente.

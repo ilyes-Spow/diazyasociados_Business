@@ -169,6 +169,19 @@ function iniciarDelegacion() {
       return;
     }
 
+    const reproducir = ev.target.closest('[data-accion="reproducir"]');
+    if (reproducir) {
+      const marco = document.createElement('iframe');
+      marco.src = reproducir.dataset.src;
+      marco.title = reproducir.dataset.titulo || 'Vídeo';
+      marco.loading = 'lazy';
+      marco.allow = 'accelerometer; clipboard-write; encrypted-media; picture-in-picture; fullscreen';
+      marco.allowFullscreen = true;
+      marco.referrerPolicy = 'strict-origin-when-cross-origin';
+      reproducir.replaceWith(marco);
+      return;
+    }
+
     const marcar = ev.target.closest('[data-accion="marcar"]');
     if (marcar) {
       const clave = marcar.dataset.clave;

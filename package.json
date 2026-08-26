@@ -1,0 +1,16 @@
+{
+  "name": "formacion-diazyasociados",
+  "version": "1.0.0",
+  "description": "Plataforma interna de formación del despacho Díaz y Asociados",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node herramientas/servidor.mjs",
+    "validar": "node herramientas/validar.mjs",
+    "empaquetar": "node herramientas/empaquetar.mjs",
+    "clave": "node herramientas/clave.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

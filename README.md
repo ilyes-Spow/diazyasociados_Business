@@ -35,6 +35,45 @@ procedimientos y normativa.
 
 ---
 
+## Desarrollo en VS Code
+
+Requiere **Node.js 18 o superior**. No hay dependencias que instalar.
+
+```bash
+git clone <url-del-repositorio>
+cd formacion-diazyasociados
+npm run dev
+```
+
+Abre `http://localhost:8099`. El servidor no cachea nada, así que basta con
+recargar el navegador tras cada cambio.
+
+### Comandos disponibles
+
+| Comando | Qué hace |
+|---|---|
+| `npm run dev` | Levanta el servidor local en el puerto 8099 |
+| `npm run dev -- --puerto 3000` | Lo levanta en otro puerto |
+| `npm run validar` | Comprueba que los contenidos están bien formados |
+| `npm run empaquetar` | Genera la versión en un solo archivo |
+| `npm run clave -- "NuevaClave"` | Calcula la huella de una clave nueva |
+
+### Lo que ya viene configurado
+
+Al abrir la carpeta en VS Code:
+
+- El **servidor de desarrollo arranca solo** (tarea automática).
+- `Ctrl/Cmd + Shift + B` genera la versión de un solo archivo.
+- `Ctrl/Cmd + Shift + P → Ejecutar tarea de prueba` valida los contenidos.
+- `F5` abre la plataforma en el navegador con el depurador conectado.
+- VS Code te recomendará un **corrector ortográfico en español**, muy útil
+  porque casi todo el proyecto es prosa.
+
+> Ejecuta `npm run validar` antes de cada commit. Detecta identificadores
+> repetidos, numeración descolocada, fechas mal escritas y Markdown roto.
+
+---
+
 ## Acceso
 
 La clave actual es **`Onboarding`** (se admite en mayúsculas o minúsculas).
@@ -188,6 +227,29 @@ Añade una entrada **al principio** del array de `content/novedades.js`:
 | `---` | Separador |
 | `[texto](url)` | Enlace |
 
+**Vídeos.** Se escriben con un bloque `:::video`, la URL en la primera línea
+y un título opcional en la segunda:
+
+```
+:::video
+https://www.youtube.com/watch?v=IDENTIFICADOR
+Título del vídeo
+:::
+```
+
+Admite **YouTube, Vimeo, Loom** y archivos `.mp4` / `.webm` propios. El
+reproductor **no se carga hasta que alguien pulsa**: hasta ese momento no se
+hace ninguna petición al proveedor y no se instala ninguna cookie de terceros.
+YouTube se incrusta además a través de `youtube-nocookie.com`.
+
+> [!AVISO] Sube las grabaciones internas como **no listadas** (YouTube) o con
+> contraseña (Vimeo). Nunca públicas: pueden contener referencias a asuntos.
+
+**Bloques de texto preformateado** (plantillas, estructuras de carpetas): se
+escriben sangrando el texto **cuatro espacios**. Dentro de los archivos de
+contenido no se pueden usar acentos graves, porque cerrarían la cadena de
+JavaScript; para eso está el delimitador `:::`.
+
 **Llamadas destacadas** (bloques de color):
 
 ```
@@ -239,17 +301,16 @@ cerrada.
 │       └── markdown.js            Renderizador de Markdown
 ├── content/                       Contenidos editables
 ├── herramientas/
-│   └── empaquetar.mjs             Genera la versión en un solo archivo
+│   ├── servidor.mjs               Servidor de desarrollo local
+│   ├── validar.mjs                Comprobación de los contenidos
+│   ├── empaquetar.mjs             Genera la versión en un solo archivo
+│   └── clave.mjs                  Calcula la huella de una clave nueva
 └── netlify/edge-functions/
     └── acceso.ts                  Puerta de acceso en servidor (opcional)
 ```
 
 Sin dependencias ni proceso de compilación: HTML, CSS y JavaScript nativo con
-módulos ES. Se puede probar en local con cualquier servidor estático:
-
-```bash
-python3 -m http.server 8099
-```
+módulos ES.
 
 ---
 

@@ -1,0 +1,50 @@
+{
+  "files.eol": "\n",
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+
+  "editor.rulers": [100],
+  "editor.tabSize": 2,
+  "editor.wordWrap": "off",
+
+  "[markdown]": {
+    "editor.wordWrap": "on",
+    "editor.quickSuggestions": { "comments": "off", "strings": "off", "other": "off" }
+  },
+
+  "cSpell.language": "es,en",
+  "cSpell.words": [
+    "asociados",
+    "buscador",
+    "contenidos",
+    "curriculo",
+    "despacho",
+    "empaquetar",
+    "envoltorio",
+    "expedientes",
+    "formacion",
+    "herramientas",
+    "hubspot",
+    "leccion",
+    "lecciones",
+    "leads",
+    "llamada",
+    "modulos",
+    "netlify",
+    "nocookie",
+    "novedades",
+    "onboarding",
+    "prosa",
+    "sangria",
+    "suplidos"
+  ],
+
+  "search.exclude": {
+    "dist": true,
+    "node_modules": true
+  },
+
+  "files.associations": {
+    "_redirects": "properties"
+  }
+}
