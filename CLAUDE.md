@@ -10,7 +10,6 @@ módulos ES.
 - `npm run admin` — panel de administración en el puerto 8100
 - `npm run validar` — comprueba la integridad de los contenidos (**ejecutar antes de cada commit**)
 - `npm run empaquetar` — genera `dist/formacion-diazyasociados.html`, versión de un solo archivo
-- `npm run clave -- "Clave"` — calcula la huella SHA-256 de una clave de acceso
 
 ## Arquitectura
 

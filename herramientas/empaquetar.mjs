@@ -57,6 +57,9 @@ ARCHIVOS_MODULOS.forEach((archivo, i) => {
 
 piezas.push(aplanar(leer('content/curriculo.js')));
 piezas.push(aplanar(leer('content/novedades.js'), 'novedades'));
+piezas.push(aplanar(leer('content/equipo.js'), 'equipo'));
+piezas.push(aplanar(leer('content/objetivos.js'), 'objetivos'));
+piezas.push(aplanar(leer('content/modelos.js'), 'modelos'));
 piezas.push(aplanar(leer('assets/js/estado.js')));
 piezas.push(aplanar(leer('assets/js/buscador.js')));
 piezas.push(aplanar(leer('assets/js/vistas.js')));
@@ -67,8 +70,10 @@ const guion = piezas.join('\n\n/* ----------------------------------------------
 /* ── Imágenes en línea ───────────────────────────────────────── */
 const aDatos = (ruta) =>
   'data:image/svg+xml;base64,' + Buffer.from(leer(ruta), 'utf8').toString('base64');
+const aDatosPng = (ruta) =>
+  'data:image/png;base64,' + readFileSync(resolve(RAIZ, ruta)).toString('base64');
 
-const LOGO = aDatos('assets/img/logo.svg');
+const LOGO = aDatosPng('assets/img/logo.png');
 const FAVICON = aDatos('assets/img/favicon.svg');
 
 /* ── Montaje del HTML ────────────────────────────────────────── */
@@ -105,7 +110,7 @@ ${css}
 </script>
 ${cuerpo
   .replace(/<script type="module"[^>]*><\/script>/, '')
-  .replace(/src="assets\/img\/logo\.svg"/g, `src="${LOGO}"`)
+  .replace(/src="assets\/img\/logo\.png"/g, `src="${LOGO}"`)
   .trimEnd()}
 
 <script>

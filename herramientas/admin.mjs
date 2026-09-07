@@ -18,6 +18,7 @@ import { existsSync } from 'node:fs';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { extname, join, normalize, sep } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { RAIZ, leerTodo, guardarTodo, aIdentificador } from './contenido.mjs';
 
 const ejecutar = promisify(execFile);
@@ -33,6 +34,14 @@ const DIR_VIDEO = join(RAIZ, 'assets', 'video');
 const EXTENSIONES_VIDEO = new Set(['.mp4', '.webm', '.ogv']);
 const LIMITE_VIDEO = 200 * 1024 * 1024; // 200 MB
 
+const DIR_MODELOS = join(RAIZ, 'assets', 'modelos');
+const REGISTRO_MODELOS = join(RAIZ, 'content', 'modelos.js');
+const EXTENSIONES_MODELO = new Set([
+  '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx',
+  '.odt', '.ods', '.odp', '.rtf', '.txt'
+]);
+const LIMITE_MODELO = 25 * 1024 * 1024; // 25 MB
+
 const TIPOS = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8',
@@ -44,7 +53,19 @@ const TIPOS = {
   '.jpg': 'image/jpeg',
   '.webp': 'image/webp',
   '.mp4': 'video/mp4',
-  '.webm': 'video/webm'
+  '.webm': 'video/webm',
+  '.pdf': 'application/pdf',
+  '.doc': 'application/msword',
+  '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  '.xls': 'application/vnd.ms-excel',
+  '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  '.ppt': 'application/vnd.ms-powerpoint',
+  '.pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  '.odt': 'application/vnd.oasis.opendocument.text',
+  '.ods': 'application/vnd.oasis.opendocument.spreadsheet',
+  '.odp': 'application/vnd.oasis.opendocument.presentation',
+  '.rtf': 'application/rtf',
+  '.txt': 'text/plain; charset=utf-8'
 };
 
 /* ── Utilidades de respuesta ─────────────────────────────────── */
@@ -88,6 +109,82 @@ async function listarVideos() {
     salida.push({ nombre, ruta: 'assets/video/' + nombre, bytes: info.size });
   }
   return salida.sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+}
+
+/* ── Modelos de documentos ───────────────────────────────────── */
+async function listarArchivosModelo() {
+  if (!existsSync(DIR_MODELOS)) return [];
+  const nombres = await readdir(DIR_MODELOS);
+  const salida = [];
+  for (const nombre of nombres) {
+    if (!EXTENSIONES_MODELO.has(extname(nombre).toLowerCase())) continue;
+    const info = await stat(join(DIR_MODELOS, nombre));
+    salida.push({ nombre, ruta: 'assets/modelos/' + nombre, bytes: info.size });
+  }
+  return salida.sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+}
+
+async function leerRegistroModelos() {
+  try {
+    const url = pathToFileURL(REGISTRO_MODELOS).href + '?v=' + Date.now();
+    const mod = await import(url);
+    return Array.isArray(mod.default) ? mod.default : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+const comillas = (v) => "'" + String(v ?? '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\r?\n/g, ' ') + "'";
+
+/* Reconstruye content/modelos.js a partir de los archivos presentes,
+   conservando el título, la categoría y la descripción ya escritos.
+   Con "extra" se aplican datos nuevos a un archivo concreto. */
+async function sincronizarModelos(extra) {
+  const archivos = await listarArchivosModelo();
+  const previos = await leerRegistroModelos();
+  const porRuta = new Map(previos.map((m) => [m.archivo, m]));
+  const hoy = new Date().toISOString().slice(0, 10);
+
+  const lista = archivos.map((a) => {
+    const previo = porRuta.get(a.ruta) || {};
+    const cambios = extra && extra.archivo === a.ruta ? extra : {};
+    const base = a.nombre.slice(0, a.nombre.length - extname(a.nombre).length);
+    return {
+      id: previo.id || aIdentificador(base),
+      titulo: cambios.titulo || previo.titulo || base.replace(/[-_]+/g, ' '),
+      descripcion: cambios.descripcion !== undefined ? cambios.descripcion : (previo.descripcion || ''),
+      categoria: cambios.categoria || previo.categoria || 'General',
+      archivo: a.ruta,
+      bytes: a.bytes,
+      actualizado: cambios.nuevo ? hoy : (previo.actualizado || hoy)
+    };
+  });
+
+  const cuerpoJs = lista.map((m) =>
+    '  {\n' +
+    '    id: ' + comillas(m.id) + ',\n' +
+    '    titulo: ' + comillas(m.titulo) + ',\n' +
+    '    descripcion: ' + comillas(m.descripcion) + ',\n' +
+    '    categoria: ' + comillas(m.categoria) + ',\n' +
+    '    archivo: ' + comillas(m.archivo) + ',\n' +
+    '    bytes: ' + m.bytes + ',\n' +
+    '    actualizado: ' + comillas(m.actualizado) + '\n' +
+    '  }'
+  ).join(',\n');
+
+  const texto =
+    '/* ===============================================================\n' +
+    '   modelos.js - Modelos de documentos del despacho\n' +
+    '   ---------------------------------------------------------------\n' +
+    '   GENERADO por el panel de administracion al subir o borrar\n' +
+    '   archivos en assets/modelos/. Se pueden retocar a mano el\n' +
+    '   titulo, la descripcion y la categoria: el panel los conserva.\n' +
+    '   =============================================================== */\n\n' +
+    'const MODELOS = [\n' + cuerpoJs + '\n];\n\n' +
+    'export default MODELOS;\n';
+
+  await writeFile(REGISTRO_MODELOS, texto, 'utf8');
+  return lista;
 }
 
 /* ── Validación de lo recibido ───────────────────────────────── */
@@ -153,7 +250,12 @@ async function atender(peticion, respuesta) {
   /* --- API --- */
   if (ruta === '/api/estado' && peticion.method === 'GET') {
     const datos = await leerTodo();
-    return json(respuesta, { ...datos, videos: await listarVideos(), git: await estadoGit() });
+    return json(respuesta, {
+      ...datos,
+      videos: await listarVideos(),
+      modelos: await leerRegistroModelos(),
+      git: await estadoGit()
+    });
   }
 
   if (ruta === '/api/guardar' && peticion.method === 'POST') {
@@ -192,6 +294,57 @@ async function atender(peticion, respuesta) {
     } catch (e) {
       return json(respuesta, { ok: false, error: e.message }, 400);
     }
+  }
+
+  if (ruta === '/api/modelo' && peticion.method === 'POST') {
+    const propuesto = url.searchParams.get('nombre') || '';
+    const extension = extname(propuesto).toLowerCase();
+    if (!EXTENSIONES_MODELO.has(extension)) {
+      return json(respuesta, { ok: false, error: 'Formato no admitido. Usa PDF, Word, Excel, PowerPoint, OpenDocument, RTF o TXT.' }, 400);
+    }
+    const nombre = aIdentificador(propuesto.slice(0, -extension.length)) + extension;
+    try {
+      const datos = await cuerpo(peticion, LIMITE_MODELO);
+      await mkdir(DIR_MODELOS, { recursive: true });
+      await writeFile(join(DIR_MODELOS, nombre), datos);
+      const modelos = await sincronizarModelos({ archivo: 'assets/modelos/' + nombre, nuevo: true });
+      console.log(`  Modelo añadido: assets/modelos/${nombre} (${(datos.length / 1048576).toFixed(1)} MB)`);
+      return json(respuesta, { ok: true, nombre, modelos });
+    } catch (e) {
+      return json(respuesta, { ok: false, error: e.message }, 400);
+    }
+  }
+
+  if (ruta === '/api/modelo' && peticion.method === 'DELETE') {
+    const nombre = url.searchParams.get('nombre') || '';
+    if (nombre.includes('/') || nombre.includes('\\') || nombre.includes('..')) {
+      return json(respuesta, { ok: false, error: 'Nombre no válido.' }, 400);
+    }
+    const destino = join(DIR_MODELOS, nombre);
+    if (!existsSync(destino)) return json(respuesta, { ok: false, error: 'No existe.' }, 404);
+    await unlink(destino);
+    const modelos = await sincronizarModelos();
+    console.log(`  Modelo eliminado: ${nombre}`);
+    return json(respuesta, { ok: true, modelos });
+  }
+
+  if (ruta === '/api/modelo-datos' && peticion.method === 'POST') {
+    let datos;
+    try {
+      datos = JSON.parse((await cuerpo(peticion, 64 * 1024)).toString('utf8'));
+    } catch (e) {
+      return json(respuesta, { ok: false, error: 'No se ha podido leer lo enviado.' }, 400);
+    }
+    if (typeof datos.archivo !== 'string' || !datos.archivo.startsWith('assets/modelos/')) {
+      return json(respuesta, { ok: false, error: 'Archivo no válido.' }, 400);
+    }
+    const modelos = await sincronizarModelos({
+      archivo: datos.archivo,
+      titulo: typeof datos.titulo === 'string' ? datos.titulo.trim() : undefined,
+      categoria: typeof datos.categoria === 'string' ? datos.categoria.trim() : undefined,
+      descripcion: typeof datos.descripcion === 'string' ? datos.descripcion.trim() : undefined
+    });
+    return json(respuesta, { ok: true, modelos });
   }
 
   if (ruta === '/api/video' && peticion.method === 'DELETE') {

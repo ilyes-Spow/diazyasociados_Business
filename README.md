@@ -3,8 +3,6 @@
 Espacio interno del despacho para el onboarding del equipo, la documentación de
 procedimientos y la difusión de novedades sobre las herramientas que utilizamos.
 
-Publicada en **https://formacion-diazyasociados.netlify.app**
-
 ---
 
 ## Qué contiene
@@ -25,7 +23,6 @@ procedimientos y normativa.
 
 ## Funcionalidades
 
-- **Puerta de acceso** con clave compartida.
 - **Seguimiento del progreso** por persona, guardado en su navegador.
 - **Buscador de texto completo** sobre todos los contenidos, insensible a tildes.
   Se abre con la tecla `/` o con `Ctrl/Cmd + K`.
@@ -59,7 +56,6 @@ recargar el navegador tras cada cambio.
 | `npm run admin` | Abre el panel de administración en el puerto 8100 |
 | `npm run validar` | Comprueba que los contenidos están bien formados |
 | `npm run empaquetar` | Genera la versión en un solo archivo |
-| `npm run clave -- "NuevaClave"` | Calcula la huella de una clave nueva |
 
 ### Lo que ya viene configurado
 
@@ -77,81 +73,39 @@ Al abrir la carpeta en VS Code:
 
 ---
 
-## Acceso
+## Acceso con Google
 
-La clave actual es **`Onboarding`** (se admite en mayúsculas o minúsculas).
+La pantalla de entrada pide **acceder con la cuenta de Google** que el
+despacho asigna a cada persona. Funciona con Google Identity Services y se
+configura en tres pasos:
 
-### Cambiar la clave
+1. En [Google Cloud Console](https://console.cloud.google.com/apis/credentials)
+   crea unas credenciales de tipo **ID de cliente de OAuth → Aplicación web**.
+2. En «Orígenes de JavaScript autorizados» añade `http://localhost:8099` y la
+   dirección donde se publique el sitio.
+3. Copia el identificador (termina en `.apps.googleusercontent.com`) en la
+   constante `CLIENTE_GOOGLE` de `assets/js/app.js`.
 
-La plataforma admite dos capas de protección. La primera está siempre activa;
-la segunda es opcional y recomendable.
+Para limitar qué cuentas entran, rellena en el mismo archivo
+`DOMINIO_PERMITIDO` (un dominio propio) o `CORREOS_PERMITIDOS` (lista de
+cuentas concretas).
 
-#### 1. Puerta del navegador (activa por defecto)
+**Mientras `CLIENTE_GOOGLE` esté vacío**, la pantalla se muestra igual pero el
+botón entra directamente, avisando de que la verificación está pendiente.
 
-En `assets/js/app.js` se guarda el SHA-256 de la clave, no la clave en claro.
-Para cambiarla, genera la huella de la nueva clave **en minúsculas**:
+> [!PENDIENTE] Crear el ID de cliente y decidir la lista de cuentas
+> permitidas. Además, esta verificación ocurre en el navegador: disuade, pero
+> los archivos del sitio siguen siendo públicos para quien tenga la dirección.
+> La protección de verdad hay que ponerla en el servidor que lo sirva
+> (por ejemplo Cloudflare Access o Google IAP, ambos con cuentas de Google).
+> Por eso ningún contenido debe incluir datos de clientes.
 
-```bash
-printf '%s' 'nuevaclave' | shasum -a 256
-```
+## Despliegue
 
-y sustituye el valor de la constante `HUELLA_CLAVE`.
+Es un sitio estático sin proceso de compilación: puede servirse desde
+cualquier alojamiento de archivos estáticos.
 
-> Esta capa disuade, pero no es seguridad real: los contenidos viajan al
-> navegador y alguien con conocimientos técnicos puede leerlos sin la clave.
-> Por eso ningún contenido de esta plataforma debe incluir datos de clientes.
-
-#### 2. Puerta en el servidor (recomendada)
-
-El repositorio incluye una función de borde (`netlify/edge-functions/acceso.ts`)
-que valida la clave **antes** de servir nada. Para activarla:
-
-1. En Netlify, ve a **Site configuration → Environment variables**.
-2. Crea la variable `SITE_PASSWORD` con la clave del despacho.
-3. Vuelve a desplegar.
-
-A partir de ese momento nadie recibe el contenido sin haber introducido la
-clave, y la puerta del navegador se salta automáticamente para no pedirla dos
-veces. **Mientras la variable no exista, la función no hace nada.**
-
----
-
-## Desplegar en tu propia cuenta de Netlify
-
-No hay proceso de compilación: es un sitio estático que se sirve tal cual.
-`netlify.toml` ya trae la configuración, así que no hay que rellenar nada.
-
-### Opción A · Arrastrar y soltar (2 minutos, sin GitHub)
-
-1. Descarga el proyecto como ZIP y descomprímelo.
-2. Entra en [app.netlify.com/drop](https://app.netlify.com/drop) con tu cuenta.
-3. Arrastra **la carpeta descomprimida** (no el ZIP).
-4. Netlify te da una dirección del tipo `nombre-aleatorio.netlify.app`.
-5. En **Site configuration → Change site name**, ponle el nombre que quieras.
-
-Para actualizarlo más adelante: **Deploys → Deploy manually** y vuelves a
-arrastrar la carpeta.
-
-### Opción B · Conectado a Git (recomendada a medio plazo)
-
-Cada cambio que subas se publica solo.
-
-1. En Netlify: **Add new site → Import an existing project**.
-2. Elige el proveedor (GitHub, GitLab o Bitbucket) y autoriza tu cuenta.
-3. Selecciona este repositorio y la rama.
-4. Deja el comando de compilación **vacío** y el directorio de publicación
-   en `.` (Netlify lo lee de `netlify.toml`).
-5. **Deploy site**.
-
-Cada `git push` a la rama conectada vuelve a desplegar automáticamente.
-
-### Después de desplegar, en cualquiera de las dos opciones
-
-- **Nombre del sitio**: Site configuration → Change site name.
-- **Dominio propio** (por ejemplo `formacion.diazyasociados.es`):
-  Domain management → Add a domain. El certificado HTTPS es automático.
-- **Clave en servidor** (recomendado): Site configuration →
-  Environment variables → `SITE_PASSWORD`. Ver el apartado de Acceso.
+> [!PENDIENTE] Decidir dónde se publica.
 
 ---
 
@@ -210,7 +164,7 @@ npm run admin          # editar en el navegador y pulsar Guardar
 npm run validar        # comprobar que todo está bien formado
 git diff               # revisar qué ha cambiado exactamente
 git add . && git commit -m "Actualizar el módulo de herencias"
-git push               # Netlify redespliega solo
+git push
 ```
 
 > El panel solo escucha en `127.0.0.1`, así que no es accesible desde la red
@@ -233,11 +187,31 @@ Los contenidos están separados del código, en `content/`.
 content/
 ├── curriculo.js          Registro de módulos y bloques temáticos
 ├── novedades.js          Entradas de la sección de Novedades
+├── equipo.js             Empleado/a del mes y tablón del despacho
+├── objetivos.js          Objetivos mensuales por persona (RRHH)
 └── modulos/
     ├── 01-bienvenida.js
     ├── 02-servicios.js
     └── ...
 ```
+
+### Equipo y objetivos del mes
+
+- `equipo.js` alimenta la sección **Equipo**: el reconocimiento de
+  empleado/a del mes y el tablón de anuncios internos (eventos, avisos,
+  celebraciones). La campana de la cabecera avisa de lo nuevo.
+- `objetivos.js` guarda los **objetivos mensuales que RRHH asigna a cada
+  persona**, ligados al correo de Google con el que entra. Cada empleado ve
+  solo los suyos en la portada y los marca al completarlos (la marca queda
+  en su navegador).
+- Por ahora estos dos archivos se editan a mano (el formato está explicado
+  dentro de cada uno); la edición desde el panel de administración está
+  pendiente.
+
+> [!IMPORTANTE] Como todos los contenidos, estos archivos viajan al
+> navegador de todo el equipo: quien sepa mirar puede leer los objetivos de
+> otros. Escribe solo objetivos operativos, nunca valoraciones personales,
+> y pide permiso antes de publicar fotos o datos personales del equipo.
 
 ### Editar una lección
 
@@ -341,8 +315,6 @@ cerrada.
 ```
 .
 ├── index.html                     Estructura de la página
-├── netlify.toml                   Configuración de despliegue y cabeceras
-├── _redirects                     Enrutado del lado del cliente
 ├── robots.txt                     Bloqueo de indexación
 ├── assets/
 │   ├── css/styles.css             Hoja de estilos completa
@@ -351,19 +323,16 @@ cerrada.
 │       ├── app.js                 Arranque, enrutador e interfaz
 │       ├── vistas.js              Generación del HTML de cada pantalla
 │       ├── buscador.js            Índice y búsqueda
-│       ├── estado.js              Sesión, tema y progreso
+│       ├── estado.js              Tema y progreso
 │       └── markdown.js            Renderizador de Markdown
 ├── content/                       Contenidos editables
-├── herramientas/
-│   ├── servidor.mjs               Servidor de desarrollo local
-│   ├── admin.mjs                  Panel de administración
-│   ├── admin/                     Interfaz del panel
-│   ├── contenido.mjs              Lectura y escritura de content/
-│   ├── validar.mjs                Comprobación de los contenidos
-│   ├── empaquetar.mjs             Genera la versión en un solo archivo
-│   └── clave.mjs                  Calcula la huella de una clave nueva
-└── netlify/edge-functions/
-    └── acceso.ts                  Puerta de acceso en servidor (opcional)
+└── herramientas/
+    ├── servidor.mjs               Servidor de desarrollo local
+    ├── admin.mjs                  Panel de administración
+    ├── admin/                     Interfaz del panel
+    ├── contenido.mjs              Lectura y escritura de content/
+    ├── validar.mjs                Comprobación de los contenidos
+    └── empaquetar.mjs             Genera la versión en un solo archivo
 ```
 
 Sin dependencias ni proceso de compilación: HTML, CSS y JavaScript nativo con

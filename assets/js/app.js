@@ -4,31 +4,37 @@
 
 import { LECCIONES, TOTAL_LECCIONES, VERSION, moduloPorId } from '../../content/curriculo.js';
 import novedades from '../../content/novedades.js';
-import { sesion, tema, progreso, novedadesVistas, almacenamientoDisponible } from './estado.js';
+import equipo from '../../content/equipo.js';
+import modelos from '../../content/modelos.js';
+import {
+  sesion, tema, progreso, novedadesVistas, vistos, objetivosHechos,
+  almacenamientoDisponible
+} from './estado.js';
 import { buscar, resaltar, normalizar, construirIndice } from './buscador.js';
 import {
   vistaInicio, vistaModulo, vistaNovedades, vistaBusqueda,
-  vistaNoEncontrada, navegacionLateral
+  vistaNoEncontrada, vistaFormacion, vistaOnboarding, vistaEquipo,
+  vistaModelos, navegacionLateral, formatearFecha, objetivosDelMes, mesActual
 } from './vistas.js';
 
-/* Huella de la clave de acceso del despacho.
-   Se compara el SHA-256 de la clave introducida, en minúsculas y
-   sin espacios sobrantes. Para cambiarla, sustituye este valor por
-   el hash de la nueva clave (ver README). */
-const HUELLA_CLAVE = 'a4963c49961afb237b424cf89f69899c335dd77ec4681e9402c0040cd05b17c0';
+/* ── Acceso con Google (Google Identity Services) ────────────
+   [PENDIENTE] Crear en Google Cloud Console un "ID de cliente de
+   OAuth" de tipo Aplicación web, añadir como orígenes autorizados
+   http://localhost:8099 y la dirección donde se publique el sitio,
+   y pegar aquí el identificador (acaba en .apps.googleusercontent.com).
+   Mientras esté vacío, la pantalla de acceso deja entrar sin verificar. */
+const CLIENTE_GOOGLE = '';
+
+/* Restricción de cuentas. Si ambas listas quedan vacías se admite
+   cualquier cuenta de Google que pase por la pantalla de acceso.
+   [PENDIENTE] Rellenar con las cuentas asignadas por el despacho. */
+const DOMINIO_PERMITIDO = '';        // p. ej. 'diazyasociados.es'
+const CORREOS_PERMITIDOS = [];       // p. ej. ['persona@gmail.com']
 
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => Array.from(document.querySelectorAll(sel));
 
 /* ── Utilidades ──────────────────────────────────────────────── */
-async function sha256(texto) {
-  const datos = new TextEncoder().encode(texto);
-  const buffer = await crypto.subtle.digest('SHA-256', datos);
-  return Array.from(new Uint8Array(buffer))
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('');
-}
-
 let temporizadorAviso = null;
 function avisar(mensaje) {
   const el = $('#aviso');
@@ -42,54 +48,82 @@ function avisar(mensaje) {
   }, 2600);
 }
 
-/* ── Puerta de acceso ────────────────────────────────────────── */
-function iniciarPuerta() {
-  const puerta = $('#puerta');
-  const form = $('#puerta-form');
-  const campo = $('#puerta-clave');
-  const error = $('#puerta-error');
-  const ver = $('#puerta-ver');
+/* ── Pantalla de acceso ──────────────────────────────────────── */
+function decodificarCredencial(credencial) {
+  // El token de Google es un JWT: cabecera.carga.firma, en base64url.
+  const carga = credencial.split('.')[1]
+    .replace(/-/g, '+').replace(/_/g, '/');
+  const bytes = Uint8Array.from(atob(carga), (c) => c.charCodeAt(0));
+  return JSON.parse(new TextDecoder().decode(bytes));
+}
 
-  puerta.hidden = false;
-  setTimeout(() => campo.focus(), 120);
+function cuentaPermitida(correo) {
+  const c = String(correo || '').toLowerCase();
+  if (!c) return false;
+  if (CORREOS_PERMITIDOS.length) {
+    return CORREOS_PERMITIDOS.some((p) => p.toLowerCase() === c);
+  }
+  if (DOMINIO_PERMITIDO) return c.endsWith('@' + DOMINIO_PERMITIDO.toLowerCase());
+  return true;
+}
 
-  ver.addEventListener('click', () => {
-    campo.type = campo.type === 'password' ? 'text' : 'password';
-    campo.focus();
-  });
+function entrarEnApp() {
+  $('#acceso').hidden = true;
+  arrancarApp();
+}
 
-  form.addEventListener('submit', async (ev) => {
-    ev.preventDefault();
-    error.hidden = true;
+function iniciarAcceso() {
+  const acceso = $('#acceso');
+  const boton = $('#acceso-entrar');
+  const error = $('#acceso-error');
+  acceso.hidden = false;
 
-    const introducida = campo.value.trim().toLowerCase();
-    if (!introducida) return;
+  // Sin identificador de cliente todavía: la pantalla se muestra igual,
+  // pero el botón entra directamente y se avisa de que falta configurarlo.
+  if (!CLIENTE_GOOGLE) {
+    boton.hidden = false;
+    $('#acceso-pendiente').hidden = false;
+    boton.addEventListener('click', () => {
+      sesion.abrir({});
+      entrarEnApp();
+    });
+    return;
+  }
 
-    let coincide = false;
-    try {
-      coincide = (await sha256(introducida)) === HUELLA_CLAVE;
-    } catch (e) {
-      // Sin Web Crypto (contexto no seguro): no se puede validar.
-      error.textContent = 'Este navegador no permite validar la clave. Accede por HTTPS o contacta con Coordinación.';
-      error.hidden = false;
-      return;
-    }
-
-    if (!coincide) {
-      error.textContent = 'La clave no es correcta. Revísala e inténtalo de nuevo.';
-      error.hidden = false;
-      campo.value = '';
-      campo.focus();
-      form.classList.remove('puerta--sacude');
-      void form.offsetWidth;
-      form.classList.add('puerta--sacude');
-      return;
-    }
-
-    sesion.abrir($('#puerta-recordar').checked);
-    puerta.hidden = true;
-    arrancarApp();
-  });
+  const guion = document.createElement('script');
+  guion.src = 'https://accounts.google.com/gsi/client';
+  guion.async = true;
+  guion.onload = () => {
+    window.google.accounts.id.initialize({
+      client_id: CLIENTE_GOOGLE,
+      callback: (respuesta) => {
+        let datos;
+        try {
+          datos = decodificarCredencial(respuesta.credential);
+        } catch (e) {
+          error.textContent = 'No se pudo leer la respuesta de Google. Inténtalo de nuevo.';
+          error.hidden = false;
+          return;
+        }
+        if (!cuentaPermitida(datos.email)) {
+          error.textContent = 'La cuenta ' + datos.email + ' no tiene acceso a esta plataforma. Usa la cuenta que te asignó el despacho.';
+          error.hidden = false;
+          return;
+        }
+        sesion.abrir({ correo: datos.email, nombre: datos.name || '' });
+        entrarEnApp();
+      }
+    });
+    window.google.accounts.id.renderButton($('#acceso-google'), {
+      theme: 'filled_blue', size: 'large', shape: 'pill',
+      text: 'signin_with', locale: 'es', width: 300
+    });
+  };
+  guion.onerror = () => {
+    error.textContent = 'No se pudo cargar el acceso de Google. Comprueba la conexión y recarga la página.';
+    error.hidden = false;
+  };
+  document.head.appendChild(guion);
 }
 
 /* ── Enrutador ───────────────────────────────────────────────── */
@@ -108,11 +142,27 @@ function pintar() {
     html = vistaInicio();
   } else if (partes[0] === 'modulo') {
     html = vistaModulo(partes[1], partes[2]);
+  } else if (partes[0] === 'formacion') {
+    html = vistaFormacion();
+  } else if (partes[0] === 'onboarding') {
+    html = vistaOnboarding();
+  } else if (partes[0] === 'modelos') {
+    html = vistaModelos();
+    if (modelos.length) {
+      const reciente = modelos.map((m) => m.actualizado || '').sort().pop();
+      vistos.marcar('modelos', reciente);
+      actualizarPuntoAvisos();
+    }
+  } else if (partes[0] === 'equipo') {
+    html = vistaEquipo();
+    if (equipo.tablon.length) vistos.marcar('tablon', equipo.tablon[0].fecha);
+    if (equipo.empleadosDelMes.length) vistos.marcar('empleado', equipo.empleadosDelMes[0].mes);
+    actualizarPuntoAvisos();
   } else if (partes[0] === 'novedades') {
     html = vistaNovedades();
     if (novedades.length) {
       novedadesVistas.marcarVistas(novedades[0].fecha);
-      $('#punto-novedades').hidden = true;
+      actualizarPuntoAvisos();
     }
   } else if (partes[0] === 'buscar') {
     const consulta = decodeURIComponent(partes.slice(1).join('/') || '');
@@ -126,6 +176,19 @@ function pintar() {
   $('#lateral-nav').innerHTML = navegacionLateral(ruta);
   actualizarProgreso();
   cerrarLateral();
+
+  // Sección activa en la navegación superior. Dentro de un módulo se
+  // resalta Formación, que es el itinerario al que pertenece.
+  const seccion = !partes.length ? 'inicio'
+    : partes[0] === 'modulo' ? 'formacion'
+    : partes[0];
+  $$('#nav-principal a').forEach((enlace) => {
+    if (enlace.dataset.seccion === seccion) enlace.setAttribute('aria-current', 'page');
+    else enlace.removeAttribute('aria-current');
+  });
+
+  // La barra lateral solo se muestra dentro de un módulo.
+  $('#app').classList.toggle('app--sin-lateral', partes[0] !== 'modulo');
 
   // Desplazamiento a la lección abierta, o al principio.
   if (partes[0] === 'modulo' && partes[2]) {
@@ -142,6 +205,119 @@ function desplazarA(el) {
       getComputedStyle(document.documentElement).getPropertyValue('--alto-cabecera'), 10) || 60;
     const arriba = el.getBoundingClientRect().top + window.scrollY - alto - 16;
     window.scrollTo({ top: Math.max(0, arriba), behavior: 'auto' });
+  });
+}
+
+/* ── Centro de avisos (campana) ──────────────────────────────── */
+const icoAviso = (d) =>
+  '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + d + '"/></svg>';
+const AVISO_ICO = {
+  campana: 'M18 8A6 6 0 106 8c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 01-3.4 0',
+  trofeo: 'M8 21h8M12 17v4M7 4h10v4.5a5 5 0 01-10 0zM7 6H4.5a2.5 2.5 0 002.5 3M17 6h2.5A2.5 2.5 0 0117 9',
+  calendario: 'M8 3v3M16 3v3M4 9h16M5 5h14a1 1 0 011 1v13a1 1 0 01-1 1H5a1 1 0 01-1-1V6a1 1 0 011-1z',
+  diana: 'M12 21a9 9 0 100-18 9 9 0 000 18zM12 16.5a4.5 4.5 0 100-9 4.5 4.5 0 000 9zM12 12h.01',
+  documento: 'M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8zM14 3v5h5M9 13h6M9 17h4'
+};
+
+const modeloMasReciente = () =>
+  modelos.map((m) => m.actualizado || '').sort().pop() || '';
+
+function hayAvisosNuevos() {
+  if (novedades.length && novedadesVistas.hayNuevas(novedades[0].fecha)) return true;
+  if (equipo.tablon.length && vistos.hayNuevo('tablon', equipo.tablon[0].fecha)) return true;
+  if (equipo.empleadosDelMes.length && vistos.hayNuevo('empleado', equipo.empleadosDelMes[0].mes)) return true;
+  if (objetivosDelMes().lista.length && vistos.hayNuevo('objetivos', mesActual())) return true;
+  if (modelos.length && vistos.hayNuevo('modelos', modeloMasReciente())) return true;
+  return false;
+}
+
+function actualizarPuntoAvisos() {
+  $('#punto-novedades').hidden = !hayAvisosNuevos();
+}
+
+function filaAviso(ruta, icono, titulo, detalle, nuevo) {
+  return (
+    '<a class="noti__item" href="' + ruta + '">' +
+      '<span class="noti__ico">' + icoAviso(AVISO_ICO[icono]) + '</span>' +
+      '<span class="noti__txt"><strong>' + titulo + '</strong><small>' + detalle + '</small></span>' +
+      (nuevo ? '<span class="noti__nuevo">Nuevo</span>' : '') +
+    '</a>'
+  );
+}
+
+function listaAvisos() {
+  const filas = [];
+
+  const obj = objetivosDelMes();
+  if (obj.lista.length) {
+    filas.push(filaAviso('#/inicio', 'diana',
+      'Objetivos del mes asignados',
+      obj.lista.length + (obj.lista.length === 1 ? ' objetivo de RRHH' : ' objetivos de RRHH'),
+      vistos.hayNuevo('objetivos', mesActual())));
+  }
+
+  const edm = equipo.empleadosDelMes[0];
+  if (edm) {
+    filas.push(filaAviso('#/equipo', 'trofeo',
+      'Empleado/a del mes: ' + edm.nombre, 'Reconocimiento del despacho',
+      vistos.hayNuevo('empleado', edm.mes)));
+  }
+
+  if (modelos.length && vistos.hayNuevo('modelos', modeloMasReciente())) {
+    filas.push(filaAviso('#/modelos', 'documento',
+      'Modelos de documentos actualizados',
+      modelos.length + (modelos.length === 1 ? ' modelo disponible' : ' modelos disponibles'),
+      true));
+  }
+
+  equipo.tablon.slice(0, 3).forEach((an) => {
+    filas.push(filaAviso('#/equipo', 'calendario', an.titulo,
+      formatearFecha(an.fecha), vistos.hayNuevo('tablon', an.fecha)));
+  });
+
+  novedades.slice(0, 3).forEach((nov) => {
+    filas.push(filaAviso('#/novedades', 'campana', nov.titulo,
+      formatearFecha(nov.fecha), novedadesVistas.hayNuevas(nov.fecha)));
+  });
+
+  return filas.length ? filas.join('') :
+    '<p class="noti__vacio">No hay avisos todavía.</p>';
+}
+
+function iniciarNotificaciones() {
+  const boton = $('#btn-noti');
+  const panel = $('#noti-panel');
+  const lista = $('#noti-lista');
+
+  actualizarPuntoAvisos();
+
+  const cerrar = () => {
+    panel.hidden = true;
+    boton.setAttribute('aria-expanded', 'false');
+  };
+
+  boton.addEventListener('click', () => {
+    if (!panel.hidden) { cerrar(); return; }
+    lista.innerHTML = listaAvisos();
+    panel.hidden = false;
+    boton.setAttribute('aria-expanded', 'true');
+    // Al abrir el panel, todo queda visto.
+    if (novedades.length) novedadesVistas.marcarVistas(novedades[0].fecha);
+    if (equipo.tablon.length) vistos.marcar('tablon', equipo.tablon[0].fecha);
+    if (equipo.empleadosDelMes.length) vistos.marcar('empleado', equipo.empleadosDelMes[0].mes);
+    if (objetivosDelMes().lista.length) vistos.marcar('objetivos', mesActual());
+    if (modelos.length) vistos.marcar('modelos', modeloMasReciente());
+    actualizarPuntoAvisos();
+  });
+
+  document.addEventListener('click', (ev) => {
+    if (!panel.hidden && !ev.target.closest('.noti')) cerrar();
+  });
+  document.addEventListener('keydown', (ev) => {
+    if (ev.key === 'Escape' && !panel.hidden) cerrar();
+  });
+  panel.addEventListener('click', (ev) => {
+    if (ev.target.closest('a')) cerrar();
   });
 }
 
@@ -182,6 +358,16 @@ function iniciarDelegacion() {
       return;
     }
 
+    const objetivo = ev.target.closest('[data-accion="objetivo"]');
+    if (objetivo) {
+      const hecho = objetivosHechos.alternar(objetivo.dataset.id);
+      avisar(hecho ? 'Objetivo completado' : 'Objetivo pendiente de nuevo');
+      const y = window.scrollY;
+      pintar();
+      window.scrollTo(0, y);
+      return;
+    }
+
     const marcar = ev.target.closest('[data-accion="marcar"]');
     if (marcar) {
       const clave = marcar.dataset.clave;
@@ -189,6 +375,14 @@ function iniciarDelegacion() {
       avisar(ahoraHecha ? 'Lección marcada como completada' : 'Lección marcada como pendiente');
 
       const art = marcar.closest('.leccion');
+      // Fuera de una lección (p. ej. una misión del onboarding): se
+      // vuelve a pintar la vista entera conservando el desplazamiento.
+      if (!art) {
+        const y = window.scrollY;
+        pintar();
+        window.scrollTo(0, y);
+        return;
+      }
       art.classList.toggle('leccion--hecha', ahoraHecha);
       marcar.classList.toggle('btn--ok', !ahoraHecha);
       marcar.classList.toggle('btn--secundario', ahoraHecha);
@@ -319,9 +513,7 @@ function arrancarApp() {
 
   construirIndice();
 
-  if (novedades.length && novedadesVistas.hayNuevas(novedades[0].fecha)) {
-    $('#punto-novedades').hidden = false;
-  }
+  iniciarNotificaciones();
 
   if (!almacenamientoDisponible()) {
     avisar('Tu navegador no guarda datos: el progreso no se conservará al cerrar.');
@@ -362,7 +554,7 @@ function inicio() {
   iniciarBuscador();
 
   if (sesion.activa()) arrancarApp();
-  else iniciarPuerta();
+  else iniciarAcceso();
 }
 
 if (document.readyState === 'loading') {

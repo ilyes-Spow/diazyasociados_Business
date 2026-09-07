@@ -35,7 +35,18 @@ const TIPOS = {
   '.mp4':  'video/mp4',
   '.webm': 'video/webm',
   '.txt':  'text/plain; charset=utf-8',
-  '.md':   'text/markdown; charset=utf-8'
+  '.md':   'text/markdown; charset=utf-8',
+  '.pdf':  'application/pdf',
+  '.doc':  'application/msword',
+  '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  '.xls':  'application/vnd.ms-excel',
+  '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  '.ppt':  'application/vnd.ms-powerpoint',
+  '.pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  '.odt':  'application/vnd.oasis.opendocument.text',
+  '.ods':  'application/vnd.oasis.opendocument.spreadsheet',
+  '.odp':  'application/vnd.oasis.opendocument.presentation',
+  '.rtf':  'application/rtf'
 };
 
 const servidor = createServer(async (peticion, respuesta) => {
@@ -60,7 +71,7 @@ const servidor = createServer(async (peticion, respuesta) => {
     });
     respuesta.end(contenido);
   } catch (e) {
-    // Todo lo que no exista cae en index.html, igual que en Netlify.
+    // Todo lo que no exista cae en index.html (enrutado del lado del cliente).
     try {
       const inicio = await readFile(join(RAIZ, 'index.html'));
       respuesta.writeHead(200, { 'content-type': TIPOS['.html'], 'cache-control': 'no-store' });

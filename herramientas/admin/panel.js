@@ -16,6 +16,7 @@ let original = '';     // instantánea para detectar cambios
 let vista = 'modulos';
 let abierto = null;    // identificador del elemento en edición
 let videos = [];
+let modelos = [];
 
 const sucio = () => datos && JSON.stringify(datos) !== original;
 
@@ -94,6 +95,7 @@ async function cargar() {
   const respuesta = await fetch('/api/estado');
   const cuerpo = await respuesta.json();
   videos = cuerpo.videos || [];
+  modelos = cuerpo.modelos || [];
   datos = {
     version: cuerpo.version,
     grupos: cuerpo.grupos,
@@ -150,6 +152,7 @@ function pintar(errores) {
     modulos: vistaModulos,
     novedades: vistaNovedades,
     videos: vistaVideos,
+    modelos: vistaModelosPanel,
     grupos: vistaGrupos,
     ayuda: vistaAyuda
   };
@@ -443,6 +446,43 @@ function vistaVideos() {
     </div>
 
     <div class="cab" style="margin-top:1.8rem"><div><h1 style="font-size:1.2rem">Vídeos subidos</h1></div></div>
+    ${filas}`;
+}
+
+/* ── Vista: modelos de documentos ────────────────────────────── */
+function vistaModelosPanel() {
+  const filas = modelos.length ? modelos.map((m) => `
+    <div class="fila">
+      <div class="fila__txt">
+        <div class="fila__tit">${esc(m.titulo)} <span style="color:var(--tinta-3);font-weight:400">· ${esc(m.categoria)}</span></div>
+        <div class="fila__sub">${esc(m.archivo)} · ${tamano(m.bytes)}${m.descripcion ? ' · ' + esc(m.descripcion) : ''}</div>
+      </div>
+      <div class="fila__acc">
+        <button class="btn btn--secundario btn--pequeno" data-datos-modelo="${esc(m.archivo)}">Datos</button>
+        <button class="btn btn--sutil btn--pequeno" data-borrar-modelo="${esc(m.archivo.split('/').pop())}">Borrar</button>
+      </div>
+    </div>`).join('') : '<div class="vacio">No hay modelos subidos todavía.</div>';
+
+  return `
+    <div class="cab">
+      <div>
+        <h1>Modelos de documentos</h1>
+        <p>Plantillas y escritos que el equipo descarga desde la sección Modelos de la plataforma. Al subir o borrar, el registro se actualiza solo; con «Datos» ajustas el título, la categoría y la descripción.</p>
+      </div>
+    </div>
+
+    <div class="tarjeta">
+      <h2>Subir un modelo</h2>
+      <p style="margin:0 0 .9rem;color:var(--tinta-3);font-size:.87rem">
+        Se guarda en <code>assets/modelos/</code> y aparece al momento en la plataforma.
+        Admite PDF, Word, Excel, PowerPoint, OpenDocument, RTF y TXT. Máximo 25 MB.
+        <strong>Sube solo plantillas vacías, nunca documentos con datos de clientes.</strong>
+      </p>
+      <input type="file" id="modelo-archivo" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.odt,.ods,.odp,.rtf,.txt">
+      <div id="modelo-progreso" style="margin-top:.7rem;color:var(--tinta-3);font-size:.85rem"></div>
+    </div>
+
+    <div class="cab" style="margin-top:1.8rem"><div><h1 style="font-size:1.2rem">Modelos publicados</h1></div></div>
     ${filas}`;
 }
 
@@ -755,6 +795,36 @@ document.addEventListener('click', async (ev) => {
     avisar('Vídeo eliminado', 'ok'); pintar(); return;
   }
 
+  if (b.hasAttribute('data-datos-modelo')) {
+    const archivo = b.dataset.datosModelo;
+    const actual = modelos.find((m) => m.archivo === archivo);
+    if (!actual) return;
+    const titulo = prompt('Título del modelo:', actual.titulo);
+    if (titulo === null) return;
+    const categoria = prompt('Categoría (por ejemplo: Extranjería, Interno, Facturación):', actual.categoria);
+    if (categoria === null) return;
+    const descripcion = prompt('Descripción breve (opcional):', actual.descripcion || '');
+    if (descripcion === null) return;
+    const r = await fetch('/api/modelo-datos', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ archivo, titulo, categoria, descripcion })
+    });
+    const res = await r.json();
+    if (!res.ok) { avisar(res.error || 'No se ha podido guardar.', 'error'); return; }
+    modelos = res.modelos || [];
+    avisar('Datos del modelo guardados', 'ok'); pintar(); return;
+  }
+  if (b.hasAttribute('data-borrar-modelo')) {
+    const nombre = b.dataset.borrarModelo;
+    if (!await confirmar('Borrar el modelo', `Se eliminará ${nombre} del proyecto. Esta acción no se puede deshacer desde el panel.`)) return;
+    const r = await fetch('/api/modelo?nombre=' + encodeURIComponent(nombre), { method: 'DELETE' });
+    const res = await r.json();
+    if (!res.ok) { avisar(res.error || 'No se ha podido borrar.', 'error'); return; }
+    modelos = res.modelos || [];
+    avisar('Modelo eliminado', 'ok'); pintar(); return;
+  }
+
   /* --- Barra superior --- */
   if (b.id === 'btn-guardar') { await guardar(); return; }
   if (b.id === 'btn-descartar') {
@@ -796,6 +866,32 @@ document.addEventListener('input', (ev) => {
     // Vista previa en vivo, sin volver a pintar toda la pantalla.
     const caja = document.querySelector('[data-vista-previa="' + el.id + '"]');
     if (caja) caja.innerHTML = render(el.value);
+  }
+});
+
+/* Subida de modelos de documentos */
+document.addEventListener('change', async (ev) => {
+  if (ev.target.id !== 'modelo-archivo') return;
+  const archivo = ev.target.files[0];
+  if (!archivo) return;
+
+  const progreso = $('#modelo-progreso');
+  progreso.textContent = 'Subiendo ' + archivo.name + ' (' + tamano(archivo.size) + ')…';
+
+  try {
+    const r = await fetch('/api/modelo?nombre=' + encodeURIComponent(archivo.name), {
+      method: 'POST',
+      headers: { 'content-type': 'application/octet-stream' },
+      body: archivo
+    });
+    const res = await r.json();
+    if (!res.ok) { progreso.textContent = ''; avisar(res.error || 'No se ha podido subir.', 'error'); return; }
+    modelos = res.modelos || [];
+    avisar('Modelo subido. Pulsa «Datos» para ponerle título y categoría.', 'ok');
+    pintar();
+  } catch (e) {
+    progreso.textContent = '';
+    avisar('Error al subir: ' + e.message, 'error');
   }
 });
 

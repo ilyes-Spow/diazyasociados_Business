@@ -10,7 +10,9 @@ const K = {
   sesion:     PREFIJO + 'sesion',
   tema:       PREFIJO + 'tema',
   progreso:   PREFIJO + 'progreso',
-  novedades:  PREFIJO + 'novedades.vistas'
+  novedades:  PREFIJO + 'novedades.vistas',
+  vistos:     PREFIJO + 'vistos',
+  objetivos:  PREFIJO + 'objetivos'
 };
 
 /* Lectura y escritura tolerantes a fallos (modo privado, cookies
@@ -41,37 +43,67 @@ function borrar(clave) {
 const DURACION_SESION = 30 * 24 * 60 * 60 * 1000; // 30 días
 
 export const sesion = {
-  activa() {
-    // Una cookie puesta por la función de borde (si está configurada)
-    // vale como sesión ya validada en el servidor.
-    if (typeof document !== 'undefined' && /(?:^|;\s*)dya_gate=ok/.test(document.cookie)) return true;
-
-    let dato = leer(K.sesion, null);
-    if (!dato) {
-      try {
-        const bruto = sessionStorage.getItem(K.sesion);
-        dato = bruto ? JSON.parse(bruto) : null;
-      } catch (e) { dato = null; }
-    }
-    if (!dato || !dato.desde) return false;
-    if (Date.now() - dato.desde > DURACION_SESION) { this.cerrar(); return false; }
-    return true;
+  usuario() {
+    const dato = leer(K.sesion, null);
+    // Las sesiones de la antigua puerta con clave no llevaban correo:
+    // se descartan para que todo el mundo pase por el acceso nuevo.
+    if (!dato || !dato.desde || typeof dato.correo !== 'string') return null;
+    if (Date.now() - dato.desde > DURACION_SESION) { this.cerrar(); return null; }
+    return dato;
   },
 
-  abrir(recordar) {
-    const dato = { desde: Date.now() };
-    if (recordar) {
-      escribir(K.sesion, dato);
-    } else {
-      try { sessionStorage.setItem(K.sesion, JSON.stringify(dato)); } catch (e) { /* nada */ }
-    }
+  activa() {
+    return this.usuario() !== null;
+  },
+
+  abrir(usuario) {
+    escribir(K.sesion, {
+      desde: Date.now(),
+      correo: (usuario && usuario.correo) || '',
+      nombre: (usuario && usuario.nombre) || ''
+    });
   },
 
   cerrar() {
     borrar(K.sesion);
-    try {
-      document.cookie = 'dya_gate=; Max-Age=0; path=/; SameSite=Lax';
-    } catch (e) { /* nada */ }
+  }
+};
+
+/* ── Avisos vistos (tablón, empleado del mes, ...) ───────────── */
+/* Guarda, por tipo de aviso, la marca (fecha o mes) más reciente
+   que la persona ya ha visto. Sirve para el punto de la campana. */
+export const vistos = {
+  de(tipo) {
+    return leer(K.vistos, {})[tipo] || '';
+  },
+  marcar(tipo, valor) {
+    if (!valor) return;
+    const v = leer(K.vistos, {});
+    if (String(valor) > String(v[tipo] || '')) {
+      v[tipo] = String(valor);
+      escribir(K.vistos, v);
+    }
+  },
+  hayNuevo(tipo, valor) {
+    return Boolean(valor) && String(valor) > this.de(tipo);
+  }
+};
+
+/* ── Objetivos del mes marcados como hechos ──────────────────── */
+export const objetivosHechos = {
+  todo() {
+    const dato = leer(K.objetivos, {});
+    return dato && typeof dato === 'object' ? dato : {};
+  },
+  hecho(id) {
+    return Boolean(this.todo()[id]);
+  },
+  alternar(id) {
+    const actual = this.todo();
+    if (actual[id]) delete actual[id];
+    else actual[id] = Date.now();
+    escribir(K.objetivos, actual);
+    return Boolean(actual[id]);
   }
 };
 
