@@ -17,6 +17,7 @@ let vista = 'modulos';
 let abierto = null;    // identificador del elemento en edición
 let videos = [];
 let modelos = [];
+let fotos = [];
 
 const sucio = () => datos && JSON.stringify(datos) !== original;
 
@@ -96,11 +97,14 @@ async function cargar() {
   const cuerpo = await respuesta.json();
   videos = cuerpo.videos || [];
   modelos = cuerpo.modelos || [];
+  fotos = cuerpo.fotos || [];
   datos = {
     version: cuerpo.version,
     grupos: cuerpo.grupos,
     modulos: cuerpo.modulos,
-    novedades: cuerpo.novedades
+    novedades: cuerpo.novedades,
+    equipo: cuerpo.equipo || { empleadosDelMes: [], tablon: [], ranking: { actualizado: '', personas: [] } },
+    objetivos: cuerpo.objetivos || {}
   };
   original = JSON.stringify(datos);
 
@@ -153,6 +157,8 @@ function pintar(errores) {
     novedades: vistaNovedades,
     videos: vistaVideos,
     modelos: vistaModelosPanel,
+    equipo: vistaEquipoPanel,
+    objetivos: vistaObjetivosPanel,
     grupos: vistaGrupos,
     ayuda: vistaAyuda
   };
@@ -484,6 +490,185 @@ function vistaModelosPanel() {
 
     <div class="cab" style="margin-top:1.8rem"><div><h1 style="font-size:1.2rem">Modelos publicados</h1></div></div>
     ${filas}`;
+}
+
+/* ── Vista: equipo (empleado del mes, tablón, ranking, fotos) ── */
+function opcionesFoto(seleccionada) {
+  return '<option value="">Sin foto (iniciales)</option>' +
+    fotos.map((f) =>
+      `<option value="${esc(f.ruta)}"${f.ruta === seleccionada ? ' selected' : ''}>${esc(f.nombre)}</option>`
+    ).join('');
+}
+
+function vistaEquipoPanel() {
+  const eq = datos.equipo;
+
+  const edm = eq.empleadosDelMes.map((p, i) => `
+    <div class="tarjeta">
+      <div class="rejilla rejilla--3">
+        <label class="campo"><span>Mes</span>
+          <input type="month" value="${esc(p.mes)}" data-edm-campo="mes" data-edm-indice="${i}"></label>
+        <label class="campo"><span>Nombre</span>
+          <input type="text" value="${esc(p.nombre)}" data-edm-campo="nombre" data-edm-indice="${i}"></label>
+        <label class="campo"><span>Iniciales</span>
+          <input type="text" maxlength="3" value="${esc(p.iniciales)}" data-edm-campo="iniciales" data-edm-indice="${i}"></label>
+      </div>
+      <div class="rejilla rejilla--2" style="margin-top:.9rem">
+        <label class="campo"><span>Foto</span>
+          <select data-edm-campo="foto" data-edm-indice="${i}">${opcionesFoto(p.foto)}</select></label>
+        <label class="campo"><span>Motivo del reconocimiento</span>
+          <input type="text" value="${esc(p.motivo)}" data-edm-campo="motivo" data-edm-indice="${i}"></label>
+      </div>
+      <div style="margin-top:.9rem;text-align:right">
+        <button class="btn btn--peligro btn--pequeno" data-borrar-edm="${i}">Borrar reconocimiento</button>
+      </div>
+    </div>`).join('');
+
+  const anuncios = eq.tablon.map((an, i) => `
+    <div class="tarjeta">
+      <div class="rejilla rejilla--3">
+        <label class="campo"><span>Fecha</span>
+          <input type="date" value="${esc(an.fecha)}" data-anuncio-campo="fecha" data-anuncio-indice="${i}"></label>
+        <label class="campo"><span>Tipo</span>
+          <select data-anuncio-campo="tipo" data-anuncio-indice="${i}">
+            <option value="evento"${an.tipo === 'evento' ? ' selected' : ''}>Evento</option>
+            <option value="aviso"${an.tipo === 'aviso' ? ' selected' : ''}>Aviso</option>
+            <option value="celebracion"${an.tipo === 'celebracion' ? ' selected' : ''}>Celebración</option>
+          </select></label>
+        <label class="campo"><span>Título</span>
+          <input type="text" value="${esc(an.titulo)}" data-anuncio-campo="titulo" data-anuncio-indice="${i}"></label>
+      </div>
+      <label class="campo" style="margin-top:.9rem"><span>Texto <small>(Markdown, opcional)</small></span>
+        <textarea style="min-height:80px" data-anuncio-campo="md" data-anuncio-indice="${i}">${esc(an.md)}</textarea></label>
+      <div style="margin-top:.9rem;text-align:right">
+        <button class="btn btn--peligro btn--pequeno" data-borrar-anuncio="${i}">Borrar anuncio</button>
+      </div>
+    </div>`).join('');
+
+  const personas = eq.ranking.personas.map((p, i) => `
+    <div class="fila">
+      <div class="fila__txt">
+        <div class="rejilla" style="grid-template-columns:2fr 80px 110px 1.5fr;gap:.6rem;align-items:end">
+          <label class="campo"><span>Nombre</span>
+            <input type="text" value="${esc(p.nombre)}" data-ranking-campo="nombre" data-ranking-indice="${i}"></label>
+          <label class="campo"><span>Iniciales</span>
+            <input type="text" maxlength="3" value="${esc(p.iniciales)}" data-ranking-campo="iniciales" data-ranking-indice="${i}"></label>
+          <label class="campo"><span>Puntos</span>
+            <input type="number" min="0" value="${Number(p.puntos) || 0}" data-ranking-campo="puntos" data-ranking-indice="${i}"></label>
+          <label class="campo"><span>Foto</span>
+            <select data-ranking-campo="foto" data-ranking-indice="${i}">${opcionesFoto(p.foto)}</select></label>
+        </div>
+      </div>
+      <div class="fila__acc">
+        <button class="btn btn--sutil btn--pequeno" data-borrar-ranking="${i}">Borrar</button>
+      </div>
+    </div>`).join('');
+
+  const galeria = fotos.length ? fotos.map((f) => `
+    <div class="fila">
+      <img src="/${esc(f.ruta)}" alt="" style="width:44px;height:44px;object-fit:cover;border-radius:10px;flex:none">
+      <div class="fila__txt">
+        <div class="fila__tit">${esc(f.nombre)}</div>
+        <div class="fila__sub">${esc(f.ruta)} · ${tamano(f.bytes)}</div>
+      </div>
+      <div class="fila__acc">
+        <button class="btn btn--sutil btn--pequeno" data-borrar-foto="${esc(f.nombre)}">Borrar</button>
+      </div>
+    </div>`).join('') : '<div class="vacio">No hay fotos subidas. Pide permiso a cada persona antes de publicar la suya.</div>';
+
+  return `
+    <div class="cab">
+      <div>
+        <h1>Equipo</h1>
+        <p>Empleado/a del mes, tablón de anuncios y ranking. Todo lo que edites aquí se publica en la sección Equipo al pulsar «Guardar cambios».</p>
+      </div>
+    </div>
+
+    <div class="cab" style="margin-top:.4rem"><div><h1 style="font-size:1.15rem">Empleado/a del mes</h1></div>
+      <button class="btn btn--secundario btn--pequeno" data-anadir-edm>+ Añadir reconocimiento</button></div>
+    ${edm || '<div class="vacio">Sin reconocimientos todavía. El más reciente va primero.</div>'}
+
+    <div class="cab" style="margin-top:1.6rem"><div><h1 style="font-size:1.15rem">Tablón del despacho</h1></div>
+      <button class="btn btn--secundario btn--pequeno" data-anadir-anuncio>+ Añadir anuncio</button></div>
+    ${anuncios || '<div class="vacio">Sin anuncios. Eventos, avisos y celebraciones del despacho.</div>'}
+
+    <div class="cab" style="margin-top:1.6rem"><div><h1 style="font-size:1.15rem">Ranking</h1></div>
+      <button class="btn btn--secundario btn--pequeno" data-anadir-ranking>+ Añadir persona</button></div>
+    <div class="tarjeta">
+      <label class="campo" style="max-width:220px"><span>Fecha de actualización</span>
+        <input type="date" value="${esc(eq.ranking.actualizado)}" data-ranking-fecha></label>
+      <p style="margin:.7rem 0 1rem;color:var(--tinta-3);font-size:.84rem">
+        El progreso de cada persona vive en su navegador, así que el ranking lo publica RRHH:
+        pídele a cada uno sus puntos (aparecen en su portada) o usa vuestros propios criterios.
+        En la plataforma se ordena solo, de más a menos puntos.
+      </p>
+      ${personas || '<div class="vacio">Sin personas en el ranking.</div>'}
+    </div>
+
+    <div class="cab" style="margin-top:1.6rem"><div><h1 style="font-size:1.15rem">Fotos del equipo</h1></div></div>
+    <div class="tarjeta">
+      <p style="margin:0 0 .9rem;color:var(--tinta-3);font-size:.87rem">
+        Se guardan en <code>assets/img/equipo/</code> y puedes elegirlas en los desplegables de arriba.
+        Formatos .jpg, .png o .webp, máximo 8 MB. <strong>Pide permiso a la persona antes de publicar su foto.</strong>
+      </p>
+      <input type="file" id="foto-archivo" accept="image/jpeg,image/png,image/webp">
+      <div id="foto-progreso" style="margin:.7rem 0;color:var(--tinta-3);font-size:.85rem"></div>
+      ${galeria}
+    </div>`;
+}
+
+/* ── Vista: objetivos mensuales por persona ──────────────────── */
+function vistaObjetivosPanel() {
+  const correos = Object.keys(datos.objetivos).sort();
+
+  const bloques = correos.map((correo) => {
+    const meses = Object.keys(datos.objetivos[correo]).sort().reverse().map((mes) => {
+      const lista = datos.objetivos[correo][mes].map((o, i) => `
+        <div class="fila">
+          <div class="fila__txt">
+            <input type="text" value="${esc(o.texto)}" style="width:100%;padding:.45rem .65rem;border-radius:8px;border:1.5px solid var(--borde);background:var(--papel-2)"
+              data-obj-texto data-obj-correo="${esc(correo)}" data-obj-mes="${esc(mes)}" data-obj-indice="${i}">
+          </div>
+          <div class="fila__acc">
+            <button class="btn btn--sutil btn--pequeno" data-borrar-objetivo data-obj-correo="${esc(correo)}" data-obj-mes="${esc(mes)}" data-obj-indice="${i}">Borrar</button>
+          </div>
+        </div>`).join('');
+      return `
+        <div style="margin-bottom:1.1rem">
+          <div class="grupo-bloque__tit" style="margin-bottom:.5rem"><i></i>${esc(mes)}
+            <button class="btn btn--sutil btn--pequeno" style="margin-left:auto" data-anadir-objetivo data-obj-correo="${esc(correo)}" data-obj-mes="${esc(mes)}">+ Objetivo</button>
+            <button class="btn btn--sutil btn--pequeno" data-borrar-mes data-obj-correo="${esc(correo)}" data-obj-mes="${esc(mes)}">Borrar mes</button>
+          </div>
+          ${lista || '<div class="vacio" style="padding:1rem">Sin objetivos este mes.</div>'}
+        </div>`;
+    }).join('');
+
+    return `
+      <div class="tarjeta">
+        <h2 style="display:flex;align-items:center;gap:.55rem">${esc(correo)}
+          <button class="btn btn--sutil btn--pequeno" style="margin-left:auto" data-anadir-mes data-obj-correo="${esc(correo)}">+ Mes</button>
+          <button class="btn btn--peligro btn--pequeno" data-borrar-persona data-obj-correo="${esc(correo)}">Quitar persona</button>
+        </h2>
+        ${meses || '<div class="vacio" style="padding:1rem">Sin meses. Añade uno para empezar.</div>'}
+      </div>`;
+  }).join('');
+
+  return `
+    <div class="cab">
+      <div>
+        <h1>Objetivos del mes</h1>
+        <p>Los asigna RRHH por persona y mes. Cada empleado ve solo los suyos al entrar con su cuenta de Google, y los marca al completarlos.</p>
+      </div>
+      <button class="btn btn--primario btn--pequeno" data-anadir-persona>+ Añadir persona</button>
+    </div>
+
+    <div class="llamada llamada--aviso">
+      <div class="llamada__txt"><span class="llamada__tit">Privacidad</span>
+        <p>Este archivo viaja al navegador de todo el equipo. Escribe solo objetivos operativos, nunca valoraciones personales.</p>
+      </div>
+    </div>
+
+    ${bloques || '<div class="vacio">Sin personas todavía. Pulsa «Añadir persona» y usa el correo de Google con el que entra cada una.</div>'}`;
 }
 
 /* ── Vista: grupos ───────────────────────────────────────────── */
@@ -825,6 +1010,93 @@ document.addEventListener('click', async (ev) => {
     avisar('Modelo eliminado', 'ok'); pintar(); return;
   }
 
+  /* --- Equipo: empleado del mes, tablón y ranking --- */
+  if (b.hasAttribute('data-anadir-edm')) {
+    const mes = new Date().toISOString().slice(0, 7);
+    datos.equipo.empleadosDelMes.unshift({ mes, nombre: '', iniciales: '', foto: '', motivo: '' });
+    marcarCambios(); pintar(); return;
+  }
+  if (b.hasAttribute('data-borrar-edm')) {
+    if (!await confirmar('Borrar el reconocimiento', 'Se quitará de la lista al guardar.')) return;
+    datos.equipo.empleadosDelMes.splice(Number(b.dataset.borrarEdm), 1);
+    marcarCambios(); pintar(); return;
+  }
+  if (b.hasAttribute('data-anadir-anuncio')) {
+    const hoy = new Date().toISOString().slice(0, 10);
+    datos.equipo.tablon.unshift({ fecha: hoy, tipo: 'aviso', titulo: '', md: '' });
+    marcarCambios(); pintar(); return;
+  }
+  if (b.hasAttribute('data-borrar-anuncio')) {
+    if (!await confirmar('Borrar el anuncio', 'Se quitará del tablón al guardar.')) return;
+    datos.equipo.tablon.splice(Number(b.dataset.borrarAnuncio), 1);
+    marcarCambios(); pintar(); return;
+  }
+  if (b.hasAttribute('data-anadir-ranking')) {
+    datos.equipo.ranking.personas.push({ nombre: '', iniciales: '', foto: '', puntos: 0 });
+    if (!datos.equipo.ranking.actualizado) {
+      datos.equipo.ranking.actualizado = new Date().toISOString().slice(0, 10);
+    }
+    marcarCambios(); pintar(); return;
+  }
+  if (b.hasAttribute('data-borrar-ranking')) {
+    datos.equipo.ranking.personas.splice(Number(b.dataset.borrarRanking), 1);
+    marcarCambios(); pintar(); return;
+  }
+  if (b.hasAttribute('data-borrar-foto')) {
+    const nombre = b.dataset.borrarFoto;
+    if (!await confirmar('Borrar la foto', `Se eliminará ${nombre}. Si alguna tarjeta la usa, quedará sin foto.`)) return;
+    const r = await fetch('/api/foto?nombre=' + encodeURIComponent(nombre), { method: 'DELETE' });
+    const res = await r.json();
+    if (!res.ok) { avisar(res.error || 'No se ha podido borrar.', 'error'); return; }
+    fotos = res.fotos || [];
+    avisar('Foto eliminada', 'ok'); pintar(); return;
+  }
+
+  /* --- Objetivos por persona --- */
+  if (b.hasAttribute('data-anadir-persona')) {
+    const correo = (prompt('Correo de Google de la persona:') || '').trim().toLowerCase();
+    if (!correo) return;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) { avisar('Eso no parece un correo válido.', 'error'); return; }
+    if (!datos.objetivos[correo]) {
+      datos.objetivos[correo] = { [new Date().toISOString().slice(0, 7)]: [] };
+      marcarCambios();
+    }
+    pintar(); return;
+  }
+  if (b.hasAttribute('data-borrar-persona')) {
+    const correo = b.dataset.objCorreo;
+    if (!await confirmar('Quitar a la persona', `Se borrarán todos los objetivos de ${correo}.`)) return;
+    delete datos.objetivos[correo];
+    marcarCambios(); pintar(); return;
+  }
+  if (b.hasAttribute('data-anadir-mes')) {
+    const mes = (prompt('Mes (AAAA-MM):', new Date().toISOString().slice(0, 7)) || '').trim();
+    if (!mes) return;
+    if (!/^\d{4}-\d{2}$/.test(mes)) { avisar('El mes debe tener formato AAAA-MM.', 'error'); return; }
+    const persona = datos.objetivos[b.dataset.objCorreo];
+    if (persona && !persona[mes]) { persona[mes] = []; marcarCambios(); }
+    pintar(); return;
+  }
+  if (b.hasAttribute('data-borrar-mes')) {
+    if (!await confirmar('Borrar el mes', 'Se borrarán los objetivos de ese mes.')) return;
+    const persona = datos.objetivos[b.dataset.objCorreo];
+    if (persona) { delete persona[b.dataset.objMes]; marcarCambios(); }
+    pintar(); return;
+  }
+  if (b.hasAttribute('data-anadir-objetivo')) {
+    const lista = datos.objetivos[b.dataset.objCorreo]?.[b.dataset.objMes];
+    if (lista) {
+      lista.push({ id: 'obj-' + Date.now().toString(36), texto: '' });
+      marcarCambios(); pintar();
+    }
+    return;
+  }
+  if (b.hasAttribute('data-borrar-objetivo')) {
+    const lista = datos.objetivos[b.dataset.objCorreo]?.[b.dataset.objMes];
+    if (lista) { lista.splice(Number(b.dataset.objIndice), 1); marcarCambios(); pintar(); }
+    return;
+  }
+
   /* --- Barra superior --- */
   if (b.id === 'btn-guardar') { await guardar(); return; }
   if (b.id === 'btn-descartar') {
@@ -861,11 +1133,66 @@ document.addEventListener('input', (ev) => {
     cambiado = true;
   }
 
+  if (el.dataset.edmCampo) {
+    datos.equipo.empleadosDelMes[Number(el.dataset.edmIndice)][el.dataset.edmCampo] = el.value;
+    cambiado = true;
+  }
+
+  if (el.dataset.anuncioCampo) {
+    datos.equipo.tablon[Number(el.dataset.anuncioIndice)][el.dataset.anuncioCampo] = el.value;
+    cambiado = true;
+  }
+
+  if (el.dataset.rankingCampo) {
+    const p = datos.equipo.ranking.personas[Number(el.dataset.rankingIndice)];
+    p[el.dataset.rankingCampo] = el.dataset.rankingCampo === 'puntos' ? Number(el.value) : el.value;
+    cambiado = true;
+  }
+
+  if (el.hasAttribute('data-ranking-fecha')) {
+    datos.equipo.ranking.actualizado = el.value;
+    cambiado = true;
+  }
+
+  if (el.hasAttribute('data-obj-texto')) {
+    const lista = datos.objetivos[el.dataset.objCorreo]?.[el.dataset.objMes];
+    if (lista && lista[Number(el.dataset.objIndice)]) {
+      lista[Number(el.dataset.objIndice)].texto = el.value;
+      cambiado = true;
+    }
+  }
+
   if (cambiado) {
     marcarCambios();
     // Vista previa en vivo, sin volver a pintar toda la pantalla.
     const caja = document.querySelector('[data-vista-previa="' + el.id + '"]');
     if (caja) caja.innerHTML = render(el.value);
+  }
+});
+
+/* Subida de fotos del equipo */
+document.addEventListener('change', async (ev) => {
+  if (ev.target.id !== 'foto-archivo') return;
+  const archivo = ev.target.files[0];
+  if (!archivo) return;
+
+  const progreso = $('#foto-progreso');
+  progreso.textContent = 'Subiendo ' + archivo.name + '…';
+
+  try {
+    const r = await fetch('/api/foto?nombre=' + encodeURIComponent(archivo.name), {
+      method: 'POST',
+      headers: { 'content-type': 'application/octet-stream' },
+      body: archivo
+    });
+    const res = await r.json();
+    if (!res.ok) { progreso.textContent = ''; avisar(res.error || 'No se ha podido subir.', 'error'); return; }
+    fotos = res.fotos || [];
+    avisar('Foto subida. Ya puedes elegirla en los desplegables.', 'ok');
+    pintar();
+  } catch (e) {
+    progreso.textContent = '';
+    avisar('Error al subir: ' + e.message, 'error');
   }
 });
 

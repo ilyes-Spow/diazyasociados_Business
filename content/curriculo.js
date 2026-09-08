@@ -1,10 +1,16 @@
 /* ===============================================================
    curriculo.js - Registro central de contenidos
    ---------------------------------------------------------------
-   Para añadir un modulo nuevo:
+   Este archivo lo mantiene el panel de administración
+   (npm run admin), pero puede editarse a mano sin problema.
+
+   Para añadir un módulo a mano:
      1. Crear el archivo en content/modulos/
-     2. Importarlo aqui
-     3. Anadirlo al array MODULOS en la posicion que corresponda
+     2. Importarlo aquí
+     3. Añadirlo al array MODULOS en la posición que corresponda
+
+   Los módulos de un mismo grupo deben ir seguidos y su número
+   debe ser correlativo desde 1. Comprobar con: npm run validar
    =============================================================== */
 
 import m01 from './modulos/01-bienvenida.js';
@@ -66,7 +72,7 @@ export const MODULOS = [
   m10, m11, m12, m13, m14, m15, m16, m17, m18
 ];
 
-/* Indice plano de lecciones, en orden de itinerario. */
+/* Índice plano de lecciones, en orden de itinerario. */
 export const LECCIONES = MODULOS.flatMap((mod) =>
   mod.lecciones.map((lec) => ({
     ...lec,

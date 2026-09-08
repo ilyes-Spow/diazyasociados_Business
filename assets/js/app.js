@@ -157,6 +157,7 @@ function pintar() {
     html = vistaEquipo();
     if (equipo.tablon.length) vistos.marcar('tablon', equipo.tablon[0].fecha);
     if (equipo.empleadosDelMes.length) vistos.marcar('empleado', equipo.empleadosDelMes[0].mes);
+    if (equipo.ranking && equipo.ranking.actualizado) vistos.marcar('ranking', equipo.ranking.actualizado);
     actualizarPuntoAvisos();
   } else if (partes[0] === 'novedades') {
     html = vistaNovedades();
@@ -226,6 +227,7 @@ function hayAvisosNuevos() {
   if (novedades.length && novedadesVistas.hayNuevas(novedades[0].fecha)) return true;
   if (equipo.tablon.length && vistos.hayNuevo('tablon', equipo.tablon[0].fecha)) return true;
   if (equipo.empleadosDelMes.length && vistos.hayNuevo('empleado', equipo.empleadosDelMes[0].mes)) return true;
+  if (equipo.ranking && equipo.ranking.actualizado && vistos.hayNuevo('ranking', equipo.ranking.actualizado)) return true;
   if (objetivosDelMes().lista.length && vistos.hayNuevo('objetivos', mesActual())) return true;
   if (modelos.length && vistos.hayNuevo('modelos', modeloMasReciente())) return true;
   return false;
@@ -261,6 +263,12 @@ function listaAvisos() {
     filas.push(filaAviso('#/equipo', 'trofeo',
       'Empleado/a del mes: ' + edm.nombre, 'Reconocimiento del despacho',
       vistos.hayNuevo('empleado', edm.mes)));
+  }
+
+  if (equipo.ranking && equipo.ranking.actualizado) {
+    filas.push(filaAviso('#/equipo', 'trofeo',
+      'Ranking de formación actualizado', 'Publicado por RRHH',
+      vistos.hayNuevo('ranking', equipo.ranking.actualizado)));
   }
 
   if (modelos.length && vistos.hayNuevo('modelos', modeloMasReciente())) {
@@ -305,6 +313,7 @@ function iniciarNotificaciones() {
     if (novedades.length) novedadesVistas.marcarVistas(novedades[0].fecha);
     if (equipo.tablon.length) vistos.marcar('tablon', equipo.tablon[0].fecha);
     if (equipo.empleadosDelMes.length) vistos.marcar('empleado', equipo.empleadosDelMes[0].mes);
+    if (equipo.ranking && equipo.ranking.actualizado) vistos.marcar('ranking', equipo.ranking.actualizado);
     if (objetivosDelMes().lista.length) vistos.marcar('objetivos', mesActual());
     if (modelos.length) vistos.marcar('modelos', modeloMasReciente());
     actualizarPuntoAvisos();

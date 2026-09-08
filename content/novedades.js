@@ -1,10 +1,10 @@
 /* ===============================================================
    novedades.js - Registro de novedades del despacho
    ---------------------------------------------------------------
-   Añade cada nueva entrada AL PRINCIPIO del array.
+   Este archivo lo mantiene el panel de administración
+   (npm run admin), pero puede editarse a mano sin problema.
+   Las entradas van de más reciente a más antigua.
    Niveles: 'critica' | 'importante' | 'informativa'
-   Etiquetas sugeridas: Herramientas, Procedimiento, Normativa,
-   Plantillas, Formación, Seguridad.
    =============================================================== */
 
 export default [

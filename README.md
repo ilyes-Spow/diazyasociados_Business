@@ -197,16 +197,18 @@ content/
 
 ### Equipo y objetivos del mes
 
-- `equipo.js` alimenta la sección **Equipo**: el reconocimiento de
-  empleado/a del mes y el tablón de anuncios internos (eventos, avisos,
-  celebraciones). La campana de la cabecera avisa de lo nuevo.
+- `equipo.js` alimenta la sección **Equipo**: empleado/a del mes, el
+  **ranking de formación** que publica RRHH y el tablón de anuncios internos
+  (eventos, avisos, celebraciones). La campana de la cabecera avisa de lo
+  nuevo.
 - `objetivos.js` guarda los **objetivos mensuales que RRHH asigna a cada
   persona**, ligados al correo de Google con el que entra. Cada empleado ve
   solo los suyos en la portada y los marca al completarlos (la marca queda
   en su navegador).
-- Por ahora estos dos archivos se editan a mano (el formato está explicado
-  dentro de cada uno); la edición desde el panel de administración está
-  pendiente.
+- Ambos se editan desde el panel de administración (pestañas **Equipo** y
+  **Objetivos**), que también permite subir **fotos del equipo** a
+  `assets/img/equipo/`. El ranking lo publica RRHH a mano: el progreso de
+  cada persona vive en su navegador, así que no puede calcularse solo.
 
 > [!IMPORTANTE] Como todos los contenidos, estos archivos viajan al
 > navegador de todo el equipo: quien sepa mirar puede leer los objetivos de

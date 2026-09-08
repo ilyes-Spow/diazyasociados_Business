@@ -326,11 +326,15 @@ export function vistaEquipo() {
   const edm = equipo.empleadosDelMes[0];
   const historial = equipo.empleadosDelMes.slice(1, 7);
 
+  const avatarDe = (p, clase) => p.foto
+    ? '<span class="' + clase + '"><img src="' + escapar(p.foto) + '" alt=""></span>'
+    : '<span class="' + clase + '">' + escapar(p.iniciales || (p.nombre || '?').slice(0, 2).toUpperCase()) + '</span>';
+
   const destacado = edm
     ? '<div class="edm">' +
         '<div class="edm__aura" aria-hidden="true"></div>' +
         '<span class="edm__cinta">' + ico(ICO.trofeo) + 'Empleado/a del mes · ' + nombreDeMes(edm.mes) + '</span>' +
-        '<span class="edm__avatar">' + escapar(edm.iniciales || (edm.nombre || '?').slice(0, 2).toUpperCase()) + '</span>' +
+        avatarDe(edm, 'edm__avatar') +
         '<h2>' + escapar(edm.nombre) + '</h2>' +
         '<p>' + escapar(edm.motivo || '') + '</p>' +
       '</div>'
@@ -344,7 +348,7 @@ export function vistaEquipo() {
       '<div class="edm-historial">' +
         historial.map((p) =>
           '<div class="edm-mini">' +
-            '<span class="edm-mini__avatar">' + escapar(p.iniciales || (p.nombre || '?').slice(0, 2).toUpperCase()) + '</span>' +
+            avatarDe(p, 'edm-mini__avatar') +
             '<div><strong>' + escapar(p.nombre) + '</strong><small>' + nombreDeMes(p.mes) + '</small></div>' +
           '</div>'
         ).join('') +
@@ -370,12 +374,57 @@ export function vistaEquipo() {
       }).join('')
     : '<p class="objetivos__vacio">El tablón está vacío. Los eventos, avisos y celebraciones del despacho aparecerán aquí.</p>';
 
+  const rk = equipo.ranking || { actualizado: '', personas: [] };
+  const clasificados = [...(rk.personas || [])].sort((a, b) => (b.puntos || 0) - (a.puntos || 0));
+  let rankingHtml = '';
+  if (clasificados.length) {
+    const podio = clasificados.slice(0, 3);
+    const resto = clasificados.slice(3);
+    // El podio se pinta 2º · 1º · 3º, como en los juegos.
+    const orden = [podio[1], podio[0], podio[2]].filter(Boolean);
+    const podioHtml = orden.map((p) => {
+      const puesto = clasificados.indexOf(p) + 1;
+      return (
+        '<div class="podio__puesto podio__puesto--' + puesto + '">' +
+          '<div class="podio__medalla">' + puesto + '</div>' +
+          avatarDe(p, 'podio__avatar') +
+          '<strong>' + escapar(p.nombre) + '</strong>' +
+          '<span class="podio__puntos">' + (p.puntos || 0) + ' pts</span>' +
+          '<div class="podio__peana"></div>' +
+        '</div>'
+      );
+    }).join('');
+    const restoHtml = resto.map((p, i) =>
+      '<div class="rk-fila">' +
+        '<span class="rk-fila__n">' + (i + 4) + '</span>' +
+        avatarDe(p, 'rk-fila__avatar') +
+        '<strong>' + escapar(p.nombre) + '</strong>' +
+        '<span class="rk-fila__puntos">' + (p.puntos || 0) + ' pts</span>' +
+      '</div>'
+    ).join('');
+    rankingHtml =
+      '<section class="rk">' +
+        '<div class="seccion-tit seccion-tit--fila"><h2>Ranking de formación</h2>' +
+          (rk.actualizado ? '<span class="rk__fecha">Actualizado el ' + formatearFecha(rk.actualizado) + '</span>' : '') +
+        '</div>' +
+        '<div class="podio">' + podioHtml + '</div>' +
+        (restoHtml ? '<div class="rk-lista">' + restoHtml + '</div>' : '') +
+        '<p class="onb-nota">Lo publica RRHH periódicamente a partir de los puntos de formación de cada persona.</p>' +
+      '</section>';
+  } else {
+    rankingHtml =
+      '<section class="rk">' +
+        '<div class="seccion-tit"><h2>Ranking de formación</h2></div>' +
+        '<p class="objetivos__vacio" style="color:var(--tinta-3)">RRHH publicará aquí la clasificación del equipo. Suma puntos completando lecciones y módulos.</p>' +
+      '</section>';
+  }
+
   return (
     '<div class="envoltorio envoltorio--ancho">' +
       '<div class="itin-cab">' +
         '<div>' +
           '<h1>Equipo</h1>' +
-          '<p class="pagina-cab__sub">La vida interna del despacho: reconocimientos, eventos y avisos.</p>' +
+          '<p class="pagina-cab__sub">La vida interna del despacho: reconocimientos, ranking, eventos y avisos.</p>' +
         '</div>' +
       '</div>' +
       '<div class="panel-columnas">' +
@@ -384,7 +433,8 @@ export function vistaEquipo() {
           historialHtml +
         '</section>' +
         '<section class="panel-col">' +
-          '<div class="seccion-tit"><h2>Tablón del despacho</h2></div>' +
+          rankingHtml +
+          '<div class="seccion-tit" style="margin-top:1.6rem"><h2>Tablón del despacho</h2></div>' +
           '<div class="tab-lista">' + anuncios + '</div>' +
         '</section>' +
       '</div>' +

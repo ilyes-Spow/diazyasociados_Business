@@ -975,6 +975,57 @@ html[data-tema="oscuro"] .tab-anuncio__ico--celebracion{background:#2c2410;color
 }
 .noti__vacio{margin:0;padding:1.2rem;font-size:.86rem;color:var(--tinta-3);text-align:center}
 
+/* Ranking del equipo */
+.edm__avatar img,.edm-mini__avatar img,.podio__avatar img,.rk-fila__avatar img{
+  width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;
+}
+.rk__fecha{font-size:.8rem;color:var(--tinta-3)}
+.podio{
+  display:flex;align-items:flex-end;justify-content:center;gap:1.4rem;
+  padding:1.6rem 1.4rem .2rem;border-radius:var(--r-xl);
+  background:linear-gradient(135deg,var(--marino-800),var(--marino-600));overflow:hidden;
+}
+.podio__puesto{
+  display:flex;flex-direction:column;align-items:center;gap:.35rem;width:140px;
+  animation:entra-tarjeta .5s cubic-bezier(.2,.7,.3,1) backwards;
+}
+.podio__puesto--2{animation-delay:.08s}
+.podio__puesto--3{animation-delay:.16s}
+.podio__medalla{
+  display:grid;place-items:center;width:26px;height:26px;border-radius:50%;
+  font-size:.8rem;font-weight:800;background:rgba(255,255,255,.12);color:#b3c1d1;
+}
+.podio__puesto--1 .podio__medalla{background:var(--oro-500);color:var(--marino-900)}
+.podio__avatar{
+  display:grid;place-items:center;width:64px;height:64px;border-radius:50%;overflow:hidden;
+  background:var(--oro-100);color:var(--marino-800);font-weight:800;font-size:1.15rem;
+  border:3px solid rgba(255,255,255,.25);
+}
+.podio__puesto--1 .podio__avatar{
+  width:80px;height:80px;border-color:var(--oro-400);
+  box-shadow:0 0 0 7px rgba(220,187,78,.2);
+}
+.podio__puesto strong{color:#fff;font-size:.88rem;text-align:center;line-height:1.25}
+.podio__puntos{font-size:.78rem;font-weight:700;color:var(--oro-400)}
+.podio__peana{width:100%;border-radius:10px 10px 0 0;background:rgba(255,255,255,.10);height:34px}
+.podio__puesto--1 .podio__peana{height:64px;background:linear-gradient(180deg,rgba(220,187,78,.4),rgba(220,187,78,.15))}
+.podio__puesto--3 .podio__peana{height:22px}
+
+.rk-lista{display:flex;flex-direction:column;gap:.5rem;margin-top:.9rem}
+.rk-fila{
+  display:flex;align-items:center;gap:.85rem;padding:.6rem .9rem;
+  background:var(--papel);border:1px solid var(--borde);border-radius:var(--r-m);
+}
+.rk-fila__n{width:22px;text-align:center;font-weight:800;font-size:.82rem;color:var(--tinta-3)}
+.rk-fila__avatar{
+  display:grid;place-items:center;width:34px;height:34px;border-radius:50%;overflow:hidden;flex-shrink:0;
+  background:var(--oro-100);color:var(--marino-800);font-weight:800;font-size:.76rem;
+}
+html[data-tema="oscuro"] .rk-fila__avatar{background:#2c2410;color:var(--oro-400)}
+.rk-fila strong{flex:1;font-size:.9rem}
+.rk-fila__puntos{font-size:.82rem;font-weight:700;color:var(--oro-600)}
+html[data-tema="oscuro"] .rk-fila__puntos{color:var(--oro-400)}
+
 /* Modelos de documentos */
 .mod-grupo{margin-bottom:1.8rem}
 .mod-rejilla{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1rem}

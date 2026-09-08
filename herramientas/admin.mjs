@@ -42,6 +42,10 @@ const EXTENSIONES_MODELO = new Set([
 ]);
 const LIMITE_MODELO = 25 * 1024 * 1024; // 25 MB
 
+const DIR_FOTOS = join(RAIZ, 'assets', 'img', 'equipo');
+const EXTENSIONES_FOTO = new Set(['.jpg', '.jpeg', '.png', '.webp']);
+const LIMITE_FOTO = 8 * 1024 * 1024; // 8 MB
+
 const TIPOS = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8',
@@ -51,6 +55,7 @@ const TIPOS = {
   '.svg': 'image/svg+xml',
   '.png': 'image/png',
   '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
   '.webp': 'image/webp',
   '.mp4': 'video/mp4',
   '.webm': 'video/webm',
@@ -107,6 +112,19 @@ async function listarVideos() {
     if (!EXTENSIONES_VIDEO.has(extname(nombre).toLowerCase())) continue;
     const info = await stat(join(DIR_VIDEO, nombre));
     salida.push({ nombre, ruta: 'assets/video/' + nombre, bytes: info.size });
+  }
+  return salida.sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+}
+
+/* ── Fotos del equipo ────────────────────────────────────────── */
+async function listarFotos() {
+  if (!existsSync(DIR_FOTOS)) return [];
+  const nombres = await readdir(DIR_FOTOS);
+  const salida = [];
+  for (const nombre of nombres) {
+    if (!EXTENSIONES_FOTO.has(extname(nombre).toLowerCase())) continue;
+    const info = await stat(join(DIR_FOTOS, nombre));
+    salida.push({ nombre, ruta: 'assets/img/equipo/' + nombre, bytes: info.size });
   }
   return salida.sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
 }
@@ -239,6 +257,48 @@ function revisar(datos) {
     if (typeof nov.md !== 'string' || !nov.md.trim()) fallos.push(donde + ' no tiene contenido.');
   }
 
+  const eq = datos.equipo;
+  if (eq && typeof eq === 'object') {
+    for (const p of eq.empleadosDelMes || []) {
+      const donde = 'El reconocimiento de "' + (p.nombre || 'sin nombre') + '"';
+      if (!texto(p.nombre)) fallos.push('Hay un empleado del mes sin nombre.');
+      if (!/^\d{4}-\d{2}$/.test(p.mes || '')) fallos.push(donde + ' necesita un mes en formato AAAA-MM.');
+    }
+    for (const an of eq.tablon || []) {
+      const donde = 'El anuncio "' + (an.titulo || 'sin título') + '"';
+      if (!texto(an.titulo)) fallos.push('Hay un anuncio del tablón sin título.');
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(an.fecha || '')) fallos.push(donde + ' no tiene una fecha válida.');
+      if (!['evento', 'aviso', 'celebracion'].includes(an.tipo)) fallos.push(donde + ' no tiene un tipo válido.');
+    }
+    const rk = eq.ranking;
+    if (rk) {
+      if (rk.actualizado && !/^\d{4}-\d{2}-\d{2}$/.test(rk.actualizado)) {
+        fallos.push('La fecha de actualización del ranking no es válida.');
+      }
+      for (const p of rk.personas || []) {
+        if (!texto(p.nombre)) fallos.push('Hay una persona del ranking sin nombre.');
+        if (!Number.isFinite(Number(p.puntos)) || Number(p.puntos) < 0) {
+          fallos.push('Los puntos de "' + (p.nombre || 'sin nombre') + '" no son válidos.');
+        }
+      }
+    }
+  }
+
+  if (datos.objetivos && typeof datos.objetivos === 'object') {
+    for (const [correo, meses] of Object.entries(datos.objetivos)) {
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) {
+        fallos.push('"' + correo + '" no parece un correo válido en los objetivos.');
+        continue;
+      }
+      for (const [mes, lista] of Object.entries(meses || {})) {
+        if (!/^\d{4}-\d{2}$/.test(mes)) fallos.push('El mes "' + mes + '" de ' + correo + ' no tiene formato AAAA-MM.');
+        for (const o of lista || []) {
+          if (!texto(o.texto)) fallos.push('Hay un objetivo vacío de ' + correo + ' en ' + mes + '.');
+        }
+      }
+    }
+  }
+
   return fallos;
 }
 
@@ -254,6 +314,7 @@ async function atender(peticion, respuesta) {
       ...datos,
       videos: await listarVideos(),
       modelos: await leerRegistroModelos(),
+      fotos: await listarFotos(),
       git: await estadoGit()
     });
   }
@@ -294,6 +355,36 @@ async function atender(peticion, respuesta) {
     } catch (e) {
       return json(respuesta, { ok: false, error: e.message }, 400);
     }
+  }
+
+  if (ruta === '/api/foto' && peticion.method === 'POST') {
+    const propuesto = url.searchParams.get('nombre') || '';
+    const extension = extname(propuesto).toLowerCase();
+    if (!EXTENSIONES_FOTO.has(extension)) {
+      return json(respuesta, { ok: false, error: 'Formato no admitido. Usa .jpg, .png o .webp.' }, 400);
+    }
+    const nombre = aIdentificador(propuesto.slice(0, -extension.length)) + extension;
+    try {
+      const datos = await cuerpo(peticion, LIMITE_FOTO);
+      await mkdir(DIR_FOTOS, { recursive: true });
+      await writeFile(join(DIR_FOTOS, nombre), datos);
+      console.log(`  Foto añadida: assets/img/equipo/${nombre}`);
+      return json(respuesta, { ok: true, nombre, ruta: 'assets/img/equipo/' + nombre, fotos: await listarFotos() });
+    } catch (e) {
+      return json(respuesta, { ok: false, error: e.message }, 400);
+    }
+  }
+
+  if (ruta === '/api/foto' && peticion.method === 'DELETE') {
+    const nombre = url.searchParams.get('nombre') || '';
+    if (nombre.includes('/') || nombre.includes('\\') || nombre.includes('..')) {
+      return json(respuesta, { ok: false, error: 'Nombre no válido.' }, 400);
+    }
+    const destino = join(DIR_FOTOS, nombre);
+    if (!existsSync(destino)) return json(respuesta, { ok: false, error: 'No existe.' }, 404);
+    await unlink(destino);
+    console.log(`  Foto eliminada: ${nombre}`);
+    return json(respuesta, { ok: true, fotos: await listarFotos() });
   }
 
   if (ruta === '/api/modelo' && peticion.method === 'POST') {

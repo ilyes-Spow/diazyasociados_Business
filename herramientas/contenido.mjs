@@ -186,6 +186,112 @@ export function serializarCurriculo({ version, grupos, modulos }) {
   ].join('\n');
 }
 
+/* ── Escritura de la vida interna (equipo.js) ────────────────── */
+export function serializarEquipo({ empleadosDelMes, tablon, ranking }) {
+  const edm = (empleadosDelMes || []).map((p) => [
+    '    {',
+    '      mes: ' + comillas(p.mes) + ',',
+    '      nombre: ' + comillas(p.nombre) + ',',
+    '      iniciales: ' + comillas(p.iniciales) + ',',
+    '      foto: ' + comillas(p.foto || '') + ',',
+    '      motivo: ' + comillas(p.motivo) + '',
+    '    }'
+  ].join('\n')).join(',\n');
+
+  const anuncios = (tablon || []).map((an) => {
+    const cuerpo = String(an.md || '').replace(/^\n+|\n+$/g, '');
+    return [
+      '    {',
+      '      fecha: ' + comillas(an.fecha) + ',',
+      '      tipo: ' + comillas(an.tipo) + ',',
+      '      titulo: ' + comillas(an.titulo) + ',',
+      '      md: `',
+      plantilla(cuerpo),
+      '`',
+      '    }'
+    ].join('\n');
+  }).join(',\n');
+
+  const r = ranking || { actualizado: '', personas: [] };
+  const personas = (r.personas || []).map((p) => [
+    '      {',
+    '        nombre: ' + comillas(p.nombre) + ',',
+    '        iniciales: ' + comillas(p.iniciales) + ',',
+    '        foto: ' + comillas(p.foto || '') + ',',
+    '        puntos: ' + (Number(p.puntos) || 0),
+    '      }'
+  ].join('\n')).join(',\n');
+
+  return [
+    '/* ===============================================================',
+    '   equipo.js - Vida interna del despacho',
+    '   ---------------------------------------------------------------',
+    '   Este archivo lo mantiene el panel de administración',
+    '   (npm run admin), pero puede editarse a mano sin problema.',
+    "   - empleadosDelMes: el más reciente PRIMERO (mes en AAAA-MM).",
+    "   - tablon: anuncios internos, el más reciente PRIMERO.",
+    "     tipo: 'evento' | 'aviso' | 'celebracion'",
+    '   - ranking: clasificación que publica RRHH periódicamente.',
+    '   =============================================================== */',
+    '',
+    'const EQUIPO = {',
+    '',
+    '  empleadosDelMes: [',
+    edm,
+    '  ],',
+    '',
+    '  tablon: [',
+    anuncios,
+    '  ],',
+    '',
+    '  ranking: {',
+    '    actualizado: ' + comillas(r.actualizado || '') + ',',
+    '    personas: [',
+    personas,
+    '    ]',
+    '  }',
+    '',
+    '};',
+    '',
+    'export default EQUIPO;',
+    ''
+  ].join('\n');
+}
+
+/* ── Escritura de los objetivos mensuales (objetivos.js) ─────── */
+export function serializarObjetivos(objetivos) {
+  const personas = Object.keys(objetivos || {}).sort().map((correo) => {
+    const meses = Object.keys(objetivos[correo] || {}).sort().map((mes) => {
+      const lista = (objetivos[correo][mes] || []).map((o) =>
+        '      { id: ' + comillas(o.id) + ', texto: ' + comillas(o.texto) + ' }'
+      ).join(',\n');
+      return '    ' + comillas(mes) + ': [\n' + lista + '\n    ]';
+    }).join(',\n');
+    return '  ' + comillas(correo) + ': {\n' + meses + '\n  }';
+  }).join(',\n');
+
+  return [
+    '/* ===============================================================',
+    '   objetivos.js - Objetivos mensuales por persona',
+    '   ---------------------------------------------------------------',
+    '   Este archivo lo mantiene el panel de administración',
+    '   (npm run admin), pero puede editarse a mano sin problema.',
+    '   La clave es el correo de Google con el que entra cada persona;',
+    '   dentro, cada mes (AAAA-MM) lleva su lista de objetivos.',
+    '',
+    '   AVISO: viaja al navegador de todo el equipo. Solo objetivos',
+    '   operativos, nunca valoraciones personales.',
+    '   =============================================================== */',
+    '',
+    'const OBJETIVOS = {',
+    personas,
+    '};',
+    '',
+    'export default OBJETIVOS;',
+    ''
+  ].join('\n');
+}
+
 /* ── Lectura ─────────────────────────────────────────────────── */
 
 /* Los archivos guardan el texto entre saltos de línea; se retiran
@@ -201,6 +307,10 @@ async function importarFresco(rutaRelativa) {
 export async function leerTodo() {
   const curriculo = await importarFresco('content/curriculo.js');
   const novedades = await importarFresco('content/novedades.js');
+  const equipo = (await importarFresco('content/equipo.js')).default || {};
+  const objetivos = (await importarFresco('content/objetivos.js')).default || {};
+
+  const ranking = equipo.ranking || {};
   return {
     version: curriculo.VERSION,
     grupos: curriculo.GRUPOS.map((g) => ({ ...g })),
@@ -209,7 +319,31 @@ export async function leerTodo() {
       etiquetas: [...(m.etiquetas || [])],
       lecciones: m.lecciones.map((l) => ({ id: l.id, titulo: l.titulo, md: recortar(l.md) }))
     })),
-    novedades: novedades.default.map((n) => ({ ...n, etiquetas: [...(n.etiquetas || [])], md: recortar(n.md) }))
+    novedades: novedades.default.map((n) => ({ ...n, etiquetas: [...(n.etiquetas || [])], md: recortar(n.md) })),
+    equipo: {
+      empleadosDelMes: (equipo.empleadosDelMes || []).map((p) => ({
+        mes: p.mes || '', nombre: p.nombre || '', iniciales: p.iniciales || '',
+        foto: p.foto || '', motivo: p.motivo || ''
+      })),
+      tablon: (equipo.tablon || []).map((an) => ({
+        fecha: an.fecha || '', tipo: an.tipo || 'aviso',
+        titulo: an.titulo || '', md: recortar(an.md)
+      })),
+      ranking: {
+        actualizado: ranking.actualizado || '',
+        personas: (ranking.personas || []).map((p) => ({
+          nombre: p.nombre || '', iniciales: p.iniciales || '',
+          foto: p.foto || '', puntos: Number(p.puntos) || 0
+        }))
+      }
+    },
+    objetivos: Object.fromEntries(Object.entries(objetivos).map(([correo, meses]) => [
+      correo,
+      Object.fromEntries(Object.entries(meses || {}).map(([mes, lista]) => [
+        mes,
+        (lista || []).map((o) => ({ id: o.id || '', texto: o.texto || '' }))
+      ]))
+    ]))
   };
 }
 
@@ -259,7 +393,7 @@ export function ordenar(grupos, modulos) {
   return ordenados;
 }
 
-export async function guardarTodo({ version, grupos, modulos, novedades }) {
+export async function guardarTodo({ version, grupos, modulos, novedades, equipo, objetivos }) {
   const ordenados = ordenar(grupos, modulos);
   const deseados = new Set(ordenados.map(nombreArchivo));
 
@@ -287,6 +421,12 @@ export async function guardarTodo({ version, grupos, modulos, novedades }) {
     serializarCurriculo({ version, grupos, modulos: ordenados }));
   await escribirAtomico(join(RAIZ, 'content', 'novedades.js'),
     serializarNovedades(novedades));
+  if (equipo) {
+    await escribirAtomico(join(RAIZ, 'content', 'equipo.js'), serializarEquipo(equipo));
+  }
+  if (objetivos) {
+    await escribirAtomico(join(RAIZ, 'content', 'objetivos.js'), serializarObjetivos(objetivos));
+  }
 
   await podarCopias();
 
