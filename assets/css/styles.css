@@ -168,11 +168,11 @@ html[data-tema="oscuro"] .btn--ok{color:#06180f}
 }
 .acceso__cinta::before,.acceso__cinta::after{content:"";width:40px;height:1px;background:rgba(201,162,39,.5)}
 .acceso__logo{
-  background:#fff;border-radius:20px;padding:1.1rem 1.7rem;
-  box-shadow:0 24px 60px rgba(0,0,0,.45), 0 0 0 1px rgba(201,162,39,.35);
+  border-radius:50%;
+  box-shadow:0 24px 60px rgba(0,0,0,.5), 0 0 0 3px rgba(201,162,39,.45), 0 0 70px rgba(220,187,78,.25);
   animation:acceso-flota 5s ease-in-out infinite;
 }
-.acceso__logo img{display:block;width:min(250px,58vw);height:auto}
+.acceso__logo img{display:block;width:min(190px,44vw);height:auto;border-radius:50%}
 .acceso__titulo{
   font-family:var(--f-titulo);font-weight:800;letter-spacing:-.02em;
   font-size:clamp(1.8rem,4.2vw,2.8rem);line-height:1.1;color:#fff;margin:0;
@@ -210,9 +210,18 @@ html[data-tema="oscuro"] .btn--ok{color:#06180f}
   border-bottom:1px solid var(--borde);
 }
 .cabecera__menu{display:none}
-.cabecera__marca{display:flex;align-items:center;text-decoration:none;color:inherit;padding:.25rem .35rem;border-radius:var(--r-m)}
+.cabecera__marca{display:flex;align-items:center;gap:.65rem;text-decoration:none;color:inherit;padding:.25rem .35rem;border-radius:var(--r-m)}
 .cabecera__marca:hover{background:var(--fondo-alt)}
-.cabecera__logo{display:block;height:40px;width:auto;background:#fff;border-radius:8px;padding:2px 8px}
+.cabecera__logo{
+  display:block;width:48px;height:48px;border-radius:50%;object-fit:cover;
+  box-shadow:0 0 0 2px rgba(201,162,39,.35);
+}
+.cabecera__nombre{
+  font-family:var(--f-titulo);font-weight:800;font-size:1.02rem;letter-spacing:-.01em;white-space:nowrap;
+}
+.cabecera__nombre b{color:var(--oro-600)}
+html[data-tema="oscuro"] .cabecera__nombre b{color:var(--oro-400)}
+@media (max-width:1150px){.cabecera__nombre{display:none}}
 .cabecera__acciones{display:flex;align-items:center;gap:.15rem;margin-left:auto}
 
 .cabecera__nav{display:flex;align-items:center;gap:1.45rem;margin-left:1.2rem}
@@ -585,7 +594,7 @@ a.llamada{text-decoration:none}
   body{font-size:15px}
   .envoltorio{padding:1.6rem 1.1rem 4rem}
   .heroe{padding:1.8rem 1.35rem}
-  .cabecera__logo{height:34px}
+  .cabecera__logo{width:40px;height:40px}
   .paso{grid-template-columns:1fr}
   .leccion__cuerpo{padding:0 1.1rem 1.2rem}
   .cifras{grid-template-columns:repeat(2,1fr)}

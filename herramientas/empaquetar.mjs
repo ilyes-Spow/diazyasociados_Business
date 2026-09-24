@@ -70,10 +70,11 @@ const guion = piezas.join('\n\n/* ----------------------------------------------
 /* ── Imágenes en línea ───────────────────────────────────────── */
 const aDatos = (ruta) =>
   'data:image/svg+xml;base64,' + Buffer.from(leer(ruta), 'utf8').toString('base64');
-const aDatosPng = (ruta) =>
-  'data:image/png;base64,' + readFileSync(resolve(RAIZ, ruta)).toString('base64');
+const aDatosBinario = (ruta, mime) =>
+  'data:' + mime + ';base64,' + readFileSync(resolve(RAIZ, ruta)).toString('base64');
 
-const LOGO = aDatosPng('assets/img/logo.png');
+const LOGO = aDatosBinario('assets/img/logo.png', 'image/png');
+const INSIGNIA = aDatosBinario('assets/img/insignia.jpg', 'image/jpeg');
 const FAVICON = aDatos('assets/img/favicon.svg');
 
 /* ── Montaje del HTML ────────────────────────────────────────── */
@@ -111,6 +112,7 @@ ${css}
 ${cuerpo
   .replace(/<script type="module"[^>]*><\/script>/, '')
   .replace(/src="assets\/img\/logo\.png"/g, `src="${LOGO}"`)
+  .replace(/src="assets\/img\/insignia\.jpg"/g, `src="${INSIGNIA}"`)
   .trimEnd()}
 
 <script>
