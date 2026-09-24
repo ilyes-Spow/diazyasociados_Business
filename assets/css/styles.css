@@ -168,11 +168,11 @@ html[data-tema="oscuro"] .btn--ok{color:#06180f}
 }
 .acceso__cinta::before,.acceso__cinta::after{content:"";width:40px;height:1px;background:rgba(201,162,39,.5)}
 .acceso__logo{
-  border-radius:50%;
-  box-shadow:0 24px 60px rgba(0,0,0,.5), 0 0 0 3px rgba(201,162,39,.45), 0 0 70px rgba(220,187,78,.25);
+  background:#fff;border-radius:20px;padding:1.1rem 1.7rem;
+  box-shadow:0 24px 60px rgba(0,0,0,.45), 0 0 0 1px rgba(201,162,39,.35);
   animation:acceso-flota 5s ease-in-out infinite;
 }
-.acceso__logo img{display:block;width:min(190px,44vw);height:auto;border-radius:50%}
+.acceso__logo img{display:block;width:min(250px,58vw);height:auto}
 .acceso__titulo{
   font-family:var(--f-titulo);font-weight:800;letter-spacing:-.02em;
   font-size:clamp(1.8rem,4.2vw,2.8rem);line-height:1.1;color:#fff;margin:0;
