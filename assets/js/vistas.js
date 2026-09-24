@@ -376,21 +376,27 @@ export function vistaEquipo() {
 
   const rk = equipo.ranking || { actualizado: '', personas: [] };
   const clasificados = [...(rk.personas || [])].sort((a, b) => (b.puntos || 0) - (a.puntos || 0));
+  // Puntuaciones con coma decimal, al estilo español (9,5).
+  const puntuacion = (n) => (Math.round((Number(n) || 0) * 100) / 100).toLocaleString('es-ES');
   let rankingHtml = '';
   if (clasificados.length) {
     const podio = clasificados.slice(0, 3);
     const resto = clasificados.slice(3);
     // El podio se pinta 2º · 1º · 3º, como en los juegos.
     const orden = [podio[1], podio[0], podio[2]].filter(Boolean);
+    const corona =
+      '<span class="podio__corona" aria-hidden="true">' +
+        '<svg viewBox="0 0 24 24"><path d="M4 18h16M4.5 16.5L3 7l5 4 4-6.5L16 11l5-4-1.5 9.5z" fill="currentColor" stroke="none"/></svg>' +
+      '</span>';
     const podioHtml = orden.map((p) => {
       const puesto = clasificados.indexOf(p) + 1;
       return (
         '<div class="podio__puesto podio__puesto--' + puesto + '">' +
-          '<div class="podio__medalla">' + puesto + '</div>' +
+          (puesto === 1 ? corona : '<div class="podio__medalla">' + puesto + '</div>') +
           avatarDe(p, 'podio__avatar') +
           '<strong>' + escapar(p.nombre) + '</strong>' +
-          '<span class="podio__puntos">' + (p.puntos || 0) + ' pts</span>' +
-          '<div class="podio__peana"></div>' +
+          '<span class="podio__puntos">' + puntuacion(p.puntos) + '</span>' +
+          '<div class="podio__peana">' + (puesto !== 1 ? '<b>' + puesto + '</b>' : '') + '</div>' +
         '</div>'
       );
     }).join('');
@@ -399,7 +405,7 @@ export function vistaEquipo() {
         '<span class="rk-fila__n">' + (i + 4) + '</span>' +
         avatarDe(p, 'rk-fila__avatar') +
         '<strong>' + escapar(p.nombre) + '</strong>' +
-        '<span class="rk-fila__puntos">' + (p.puntos || 0) + ' pts</span>' +
+        '<span class="rk-fila__puntos">' + puntuacion(p.puntos) + '</span>' +
       '</div>'
     ).join('');
     rankingHtml =

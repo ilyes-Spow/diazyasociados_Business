@@ -553,8 +553,8 @@ function vistaEquipoPanel() {
             <input type="text" value="${esc(p.nombre)}" data-ranking-campo="nombre" data-ranking-indice="${i}"></label>
           <label class="campo"><span>Iniciales</span>
             <input type="text" maxlength="3" value="${esc(p.iniciales)}" data-ranking-campo="iniciales" data-ranking-indice="${i}"></label>
-          <label class="campo"><span>Puntos</span>
-            <input type="number" min="0" value="${Number(p.puntos) || 0}" data-ranking-campo="puntos" data-ranking-indice="${i}"></label>
+          <label class="campo"><span>Puntuación</span>
+            <input type="number" min="0" step="0.01" value="${Number(p.puntos) || 0}" data-ranking-campo="puntos" data-ranking-indice="${i}"></label>
           <label class="campo"><span>Foto</span>
             <select data-ranking-campo="foto" data-ranking-indice="${i}">${opcionesFoto(p.foto)}</select></label>
         </div>
