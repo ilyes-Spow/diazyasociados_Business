@@ -68,6 +68,9 @@ a{color:var(--marino-600)}
 .barra__marca strong{display:block;font-family:var(--f-titulo);font-weight:700;font-size:.88rem;line-height:1.25;color:#fff;letter-spacing:-.01em}
 .barra__marca small{display:block;font-size:.71rem;color:#8296ab}
 .barra__acciones{display:flex;flex-direction:column;align-items:stretch;gap:.6rem;margin-top:auto}
+.barra__portal{margin-bottom:.4rem;border-color:rgba(220,187,78,.4);color:#dcbb4e}
+.barra__portal:hover{color:#fff;border-color:#dcbb4e}
+.barra__portal svg{width:15px;height:15px}
 
 .pestanas{display:flex;flex-direction:column;gap:.3rem}
 .pestana{
