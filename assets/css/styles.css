@@ -1053,6 +1053,26 @@ html[data-tema="oscuro"] .rk-fila__avatar{background:#2c2410;color:var(--oro-400
 .rk-fila__puntos{font-size:.82rem;font-weight:700;color:var(--oro-600)}
 html[data-tema="oscuro"] .rk-fila__puntos{color:var(--oro-400)}
 
+/* Mis objetivos */
+.objetivos__todos{
+  margin-left:auto;font-size:.78rem;font-weight:700;color:var(--oro-400);
+  text-decoration:none;white-space:nowrap;
+}
+.objetivos__todos:hover{text-decoration:underline;color:var(--oro-400)}
+.obj-mes{
+  max-width:680px;margin-bottom:1.2rem;padding:1.3rem 1.4rem;
+  background:var(--papel);border:1px solid var(--borde);border-radius:var(--r-l);
+  animation:entra-tarjeta .4s cubic-bezier(.2,.7,.3,1) backwards;
+}
+.obj-mes:nth-child(2){animation-delay:.06s}
+.obj-mes:nth-child(3){animation-delay:.12s}
+.obj-mes--actual{border:2px solid var(--oro-500);box-shadow:var(--sombra-1)}
+.obj-mes__cab{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin-bottom:.7rem}
+.obj-mes__cab h2{margin:0;font-size:1.05rem;text-transform:capitalize}
+.obj-mes__cuenta{margin-left:auto;font-size:.82rem;font-weight:700;color:var(--tinta-3)}
+.obj-mes__barra{height:7px;border-radius:4px;background:var(--fondo-alt);overflow:hidden;margin-bottom:.9rem}
+.obj-mes__barra span{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg,var(--oro-500),var(--oro-400));transition:width .6s cubic-bezier(.2,.7,.3,1)}
+
 /* Galería de presencia internacional */
 .sedes-bloque{margin-top:2rem}
 .sedes{

@@ -14,8 +14,8 @@ import { buscar, resaltar, normalizar, construirIndice } from './buscador.js';
 import {
   vistaInicio, vistaModulo, vistaNovedades, vistaBusqueda,
   vistaNoEncontrada, vistaFormacion, vistaOnboarding, vistaEquipo,
-  vistaModelos, vistaMuro, piezaPublicacion, piezaOficial, elementosOficiales,
-  navegacionLateral, formatearFecha, objetivosDelMes, mesActual
+  vistaModelos, vistaMuro, vistaMisObjetivos, piezaPublicacion, piezaOficial,
+  elementosOficiales, navegacionLateral, formatearFecha, objetivosDelMes, mesActual
 } from './vistas.js';
 
 /* ── Acceso con Google (Google Identity Services) ────────────
@@ -147,6 +147,12 @@ function pintar() {
     html = vistaFormacion();
   } else if (partes[0] === 'onboarding') {
     html = vistaOnboarding();
+  } else if (partes[0] === 'objetivos') {
+    html = vistaMisObjetivos();
+    if (objetivosDelMes().lista.length) {
+      vistos.marcar('objetivos', mesActual());
+      actualizarPuntoAvisos();
+    }
   } else if (partes[0] === 'conecta' || partes[0] === 'muro') {
     html = vistaMuro();
   } else if (partes[0] === 'modelos') {
@@ -259,7 +265,7 @@ function listaAvisos() {
 
   const obj = objetivosDelMes();
   if (obj.lista.length) {
-    filas.push(filaAviso('#/inicio', 'diana',
+    filas.push(filaAviso('#/objetivos', 'diana',
       'Objetivos del mes asignados',
       obj.lista.length + (obj.lista.length === 1 ? ' objetivo de RRHH' : ' objetivos de RRHH'),
       vistos.hayNuevo('objetivos', mesActual())));

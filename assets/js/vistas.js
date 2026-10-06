@@ -309,6 +309,101 @@ function tarjetaObjetivos() {
         '<span class="objetivos__ico">' + ico(ICO.diana) + '</span>' +
         '<div><strong>Tus objetivos del mes</strong>' +
         '<small>' + nombreDeMes(mesActual()) + ' · asignados por RRHH</small></div>' +
+        '<a class="objetivos__todos" href="#/objetivos">Ver todos</a>' +
+      '</div>' +
+      cuerpo +
+    '</div>'
+  );
+}
+
+/* ── Mis objetivos: la página personal de cada empleado ──────── */
+export function vistaMisObjetivos() {
+  const u = sesion.usuario() || {};
+  const correo = (u.correo || '').toLowerCase();
+  const nombre = nombreDePila();
+
+  let cuerpo;
+  let datosCab = '';
+
+  if (!correo) {
+    cuerpo =
+      '<div class="objetivos" style="max-width:560px">' +
+        '<div class="objetivos__cab">' +
+          '<span class="objetivos__ico">' + ico(ICO.diana) + '</span>' +
+          '<div><strong>Todavía no sabemos quién eres</strong>' +
+          '<small>Los objetivos se asignan a tu cuenta de Google</small></div>' +
+        '</div>' +
+        '<p class="objetivos__vacio">Cuando el acceso con Google esté activo, al entrar con tu cuenta verás aquí los objetivos que RRHH te asigne cada mes, y podrás ir marcándolos.</p>' +
+      '</div>';
+  } else {
+    const porMes = objetivos[correo] || {};
+    const meses = Object.keys(porMes).sort().reverse();
+
+    if (!meses.length) {
+      cuerpo =
+        '<p class="objetivos__vacio" style="color:var(--tinta-3);max-width:60ch">' +
+          'RRHH todavía no ha asignado objetivos a <strong>' + escapar(correo) + '</strong>. ' +
+          'En cuanto los publique, aparecerán aquí y te avisará la campana.</p>';
+    } else {
+      let totalHechos = 0;
+      let total = 0;
+
+      const bloques = meses.map((mes) => {
+        const lista = porMes[mes] || [];
+        const hechos = lista.filter((o) => objetivosHechos.hecho(mes + '/' + o.id)).length;
+        totalHechos += hechos;
+        total += lista.length;
+        const pct = lista.length ? Math.round((hechos / lista.length) * 100) : 0;
+        const completo = lista.length > 0 && hechos === lista.length;
+        const esActual = mes === mesActual();
+
+        const filas = lista.map((o) => {
+          const clave = mes + '/' + o.id;
+          const hecho = objetivosHechos.hecho(clave);
+          return (
+            '<button type="button" class="mision' + (hecho ? ' mision--hecha' : '') +
+              '" data-accion="objetivo" data-id="' + escapar(clave) + '">' +
+              '<span class="mision__marca">' + (hecho ? ico(ICO.tick) : '') + '</span>' +
+              '<span class="mision__txt">' + escapar(o.texto) + '</span>' +
+            '</button>'
+          );
+        }).join('');
+
+        return (
+          '<section class="obj-mes' + (esActual ? ' obj-mes--actual' : '') + '">' +
+            '<div class="obj-mes__cab">' +
+              '<h2>' + nombreDeMes(mes) + '</h2>' +
+              (esActual ? '<span class="pastilla pastilla--oro">Mes actual</span>' : '') +
+              (completo ? '<span class="pastilla pastilla--ok">' + ico(ICO.tick) + 'Completado</span>' : '') +
+              '<span class="obj-mes__cuenta">' + hechos + ' de ' + lista.length + '</span>' +
+            '</div>' +
+            '<div class="obj-mes__barra"><span style="width:' + pct + '%"></span></div>' +
+            '<div class="mision-lista">' +
+              (filas || '<p class="objetivos__vacio" style="color:var(--tinta-3)">Sin objetivos este mes.</p>') +
+            '</div>' +
+          '</section>'
+        );
+      }).join('');
+
+      datosCab =
+        '<div class="itin-datos">' +
+          '<span><small>Completados</small><strong>' + totalHechos + ' / ' + total + '</strong></span>' +
+          '<span><small>Meses con objetivos</small><strong>' + meses.length + '</strong></span>' +
+        '</div>';
+      cuerpo = bloques;
+    }
+  }
+
+  return (
+    '<div class="envoltorio">' +
+      '<div class="itin-cab">' +
+        '<div>' +
+          '<h1>Mis objetivos</h1>' +
+          '<p class="pagina-cab__sub">' +
+            (nombre ? 'Los objetivos que RRHH te asigna, ' + escapar(nombre) + ', mes a mes. Marca cada uno al completarlo.'
+                    : 'Los objetivos que RRHH te asigna, mes a mes. Marca cada uno al completarlo.') + '</p>' +
+        '</div>' +
+        datosCab +
       '</div>' +
       cuerpo +
     '</div>'
@@ -1102,6 +1197,9 @@ export function navegacionLateral(rutaActual) {
     '</a>' +
     '<a class="nav-item" href="#/conecta"' + (rutaActual === '#/conecta' ? ' aria-current="page"' : '') + '>' +
       '<span class="nav-item__n">Co</span><span class="nav-item__txt">Conecta</span>' +
+    '</a>' +
+    '<a class="nav-item" href="#/objetivos"' + (rutaActual === '#/objetivos' ? ' aria-current="page"' : '') + '>' +
+      '<span class="nav-item__n">Ob</span><span class="nav-item__txt">Mis objetivos</span>' +
     '</a>' +
   '</div>';
 }
