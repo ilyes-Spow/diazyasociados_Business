@@ -74,6 +74,7 @@ const aDatosBinario = (ruta, mime) =>
   'data:' + mime + ';base64,' + readFileSync(resolve(RAIZ, ruta)).toString('base64');
 
 const LOGO = aDatosBinario('assets/img/logo.png', 'image/png');
+const LOGO_INT = aDatosBinario('assets/img/logo-internacional.jpg', 'image/jpeg');
 const INSIGNIA = aDatosBinario('assets/img/insignia.jpg', 'image/jpeg');
 const FAVICON = aDatos('assets/img/favicon.svg');
 
@@ -113,6 +114,7 @@ ${cuerpo
   .replace(/<script type="module"[^>]*><\/script>/, '')
   .replace(/src="assets\/img\/logo\.png"/g, `src="${LOGO}"`)
   .replace(/src="assets\/img\/insignia\.jpg"/g, `src="${INSIGNIA}"`)
+  .replace(/src="assets\/img\/logo-internacional\.jpg"/g, `src="${LOGO_INT}"`)
   .trimEnd()}
 
 <script>

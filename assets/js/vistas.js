@@ -425,6 +425,33 @@ export function vistaEquipo() {
       '</section>';
   }
 
+  const SEDES = [
+    { foto: 'mexico.jpg', nombre: 'México' },
+    { foto: 'buenos-aires.jpg', nombre: 'Buenos Aires' },
+    { foto: 'londres.jpg', nombre: 'Londres' },
+    { foto: 'barcelona.jpg', nombre: 'Barcelona' },
+    { foto: 'valencia.jpg', nombre: 'Valencia' },
+    { foto: 'malaga.jpg', nombre: 'Málaga' },
+    { foto: 'alicante.jpg', nombre: 'Alicante' }
+  ];
+  const presencia =
+    '<section class="sedes-bloque">' +
+      '<div class="seccion-tit"><h2>Nuestra presencia</h2></div>' +
+      '<p class="onb-nota" style="margin-top:0">Un despacho internacional: España, Colombia, México, Argentina y Reino Unido.</p>' +
+      '<div class="sedes">' +
+        '<figure class="sede sede--grande">' +
+          '<img src="assets/img/marca/recepcion.jpg" alt="Recepción del despacho" loading="lazy">' +
+          '<figcaption>La oficina</figcaption>' +
+        '</figure>' +
+        SEDES.map((s) =>
+          '<figure class="sede">' +
+            '<img src="assets/img/marca/' + s.foto + '" alt="' + escapar(s.nombre) + '" loading="lazy">' +
+            '<figcaption>' + escapar(s.nombre) + '</figcaption>' +
+          '</figure>'
+        ).join('') +
+      '</div>' +
+    '</section>';
+
   return (
     '<div class="envoltorio envoltorio--ancho">' +
       '<div class="itin-cab">' +
@@ -444,6 +471,7 @@ export function vistaEquipo() {
           '<div class="tab-lista">' + anuncios + '</div>' +
         '</section>' +
       '</div>' +
+      presencia +
     '</div>'
   );
 }
