@@ -524,7 +524,6 @@ export function vistaEquipo() {
     { foto: 'mexico.jpg', nombre: 'México' },
     { foto: 'buenos-aires.jpg', nombre: 'Buenos Aires' },
     { foto: 'londres.jpg', nombre: 'Londres' },
-    { foto: 'barcelona.jpg', nombre: 'Barcelona' },
     { foto: 'valencia.jpg', nombre: 'Valencia' },
     { foto: 'malaga.jpg', nombre: 'Málaga' },
     { foto: 'alicante.jpg', nombre: 'Alicante' }
@@ -660,7 +659,7 @@ const inicialesDe = (nombre) => {
          (partes.length > 1 ? ((partes[1] || '')[0] || '').toUpperCase() : '');
 };
 
-export function piezaPublicacion(pub, miClave) {
+export function piezaPublicacion(pub, miClave, puedoModerar) {
   const tipo = TIPOS_MURO[pub.tipo] || TIPOS_MURO.sugerencia;
   const gracias = Array.isArray(pub.gracias) ? pub.gracias : [];
   const mio = pub.clave === miClave;
@@ -685,9 +684,9 @@ export function piezaPublicacion(pub, miClave) {
             '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s-7.5-4.6-9.5-9A5.2 5.2 0 0112 6.6a5.2 5.2 0 019.5 4.9c-2 4.4-9.5 9-9.5 9z"/></svg>' +
             '<span>' + (gracias.length || '') + '</span>' +
           '</button>' +
-          (mio
+          (mio || puedoModerar
             ? '<button type="button" class="muro-borrar" data-accion="borrar-muro" data-id="' +
-                escapar(pub.id) + '">Borrar</button>'
+                escapar(pub.id) + '">' + (mio ? 'Borrar' : 'Moderar: borrar') + '</button>'
             : '') +
         '</div>' +
       '</div>' +

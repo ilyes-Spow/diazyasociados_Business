@@ -60,6 +60,7 @@ piezas.push(aplanar(leer('content/novedades.js'), 'novedades'));
 piezas.push(aplanar(leer('content/equipo.js'), 'equipo'));
 piezas.push(aplanar(leer('content/objetivos.js'), 'objetivos'));
 piezas.push(aplanar(leer('content/modelos.js'), 'modelos'));
+piezas.push(aplanar(leer('content/administradores.js'), 'administradores'));
 piezas.push(aplanar(leer('assets/js/estado.js')));
 piezas.push(aplanar(leer('assets/js/buscador.js')));
 piezas.push(aplanar(leer('assets/js/vistas.js')));

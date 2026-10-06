@@ -60,6 +60,19 @@ const TIPOS = {
   '.rtf':  'application/rtf'
 };
 
+/* Papel de administración: los correos de content/administradores.js
+   pueden moderar Conecta. Se importa fresco para recoger cambios. */
+async function esAdministradorServidor(clave) {
+  try {
+    const { pathToFileURL } = await import('node:url');
+    const url = pathToFileURL(join(RAIZ, 'content', 'administradores.js')).href + '?v=' + Date.now();
+    const lista = (await import(url)).default;
+    return Array.isArray(lista) && lista.map((c) => String(c).toLowerCase()).includes(clave);
+  } catch (e) {
+    return false;
+  }
+}
+
 /* ── El Muro: publicaciones del equipo ───────────────────────── */
 async function leerMuro() {
   try {
@@ -188,7 +201,7 @@ async function atenderMuro(peticion, respuesta, url) {
     const lista = await leerMuro();
     const publicacion = lista.find((p) => p.id === id);
     if (!publicacion) return json(respuesta, { ok: false, error: 'No existe.' }, 404);
-    if (publicacion.clave !== clave) {
+    if (publicacion.clave !== clave && !(await esAdministradorServidor(clave))) {
       return json(respuesta, { ok: false, error: 'Solo puedes borrar tus propias publicaciones.' }, 403);
     }
     await guardarMuro(lista.filter((p) => p.id !== id));

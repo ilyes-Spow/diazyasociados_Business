@@ -6,6 +6,7 @@ import { LECCIONES, TOTAL_LECCIONES, VERSION, moduloPorId } from '../../content/
 import novedades from '../../content/novedades.js';
 import equipo from '../../content/equipo.js';
 import modelos from '../../content/modelos.js';
+import administradores from '../../content/administradores.js';
 import {
   sesion, tema, progreso, novedadesVistas, vistos, objetivosHechos,
   autorMuro, almacenamientoDisponible
@@ -388,6 +389,17 @@ function claveActual() {
   return a ? a.clave : '';
 }
 
+/* ¿La sesión actual tiene papel de administración? Con Google
+   activo se decide por el correo; en desarrollo (sin Google) se
+   asume que quien tiene el proyecto en su equipo es quien
+   administra, así que el acceso al panel se muestra siempre. */
+function esAdministrador() {
+  const u = sesion.usuario() || {};
+  const correo = (u.correo || '').toLowerCase();
+  if (correo) return administradores.includes(correo);
+  return !CLIENTE_GOOGLE;
+}
+
 /* El hilo mezcla publicaciones del equipo y anuncios oficiales,
    ordenados por fecha, y se pinta por páginas con scroll infinito. */
 const FEED_PAGINA = 8;
@@ -397,8 +409,9 @@ let feedObservador = null;
 
 function construirFeed() {
   const clave = claveActual();
+  const moderador = esAdministrador();
   const publicaciones = muroPublicaciones.map((p) => ({
-    fecha: p.fecha, html: piezaPublicacion(p, clave)
+    fecha: p.fecha, html: piezaPublicacion(p, clave, moderador)
   }));
   const oficiales = elementosOficiales().map((o) => ({
     fecha: o.fecha, html: piezaOficial(o)
@@ -535,7 +548,7 @@ async function graciasEnMuro(id) {
     const i = muroPublicaciones.findIndex((p) => p.id === id);
     if (i !== -1) muroPublicaciones[i] = datos.publicacion;
     const pieza = document.getElementById('pub-' + id);
-    if (pieza) pieza.outerHTML = piezaPublicacion(datos.publicacion, autor.clave);
+    if (pieza) pieza.outerHTML = piezaPublicacion(datos.publicacion, autor.clave, esAdministrador());
   } catch (e) {
     avisar('No hay conexión con el servidor de Conecta.');
   }
@@ -544,7 +557,11 @@ async function graciasEnMuro(id) {
 async function borrarDelMuro(id) {
   const autor = autorMuro.de();
   if (!autor) return;
-  if (!confirm('¿Borrar tu publicación? No se puede deshacer.')) return;
+  const pub = muroPublicaciones.find((p) => p.id === id);
+  const ajena = pub && pub.clave !== autor.clave;
+  if (!confirm(ajena
+    ? '¿Borrar esta publicación de ' + (pub.nombre || 'otra persona') + ' como administración? No se puede deshacer.'
+    : '¿Borrar tu publicación? No se puede deshacer.')) return;
   try {
     const r = await fetch('/api/muro?id=' + encodeURIComponent(id) +
       '&clave=' + encodeURIComponent(autor.clave), { method: 'DELETE' });
@@ -776,6 +793,8 @@ function arrancarApp() {
 
   iniciarNotificaciones();
   sondearMuro();
+
+  $('#btn-admin').hidden = !esAdministrador();
 
   if (!almacenamientoDisponible()) {
     avisar('Tu navegador no guarda datos: el progreso no se conservará al cerrar.');
