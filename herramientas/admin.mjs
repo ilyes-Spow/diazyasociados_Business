@@ -20,6 +20,7 @@ import { promisify } from 'node:util';
 import { extname, join, normalize, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { RAIZ, leerTodo, guardarTodo, aIdentificador } from './contenido.mjs';
+import { enviarAviso } from './correo.mjs';
 
 const ejecutar = promisify(execFile);
 
@@ -302,6 +303,46 @@ function revisar(datos) {
   return fallos;
 }
 
+/* ── Avisos por correo al publicar cosas nuevas ──────────────── */
+function avisarNovedades(previo, nuevo) {
+  const yaEstaba = (lista, elemento, campos) =>
+    (lista || []).some((x) => campos.every((c) => x[c] === elemento[c]));
+
+  const nov = (nuevo.novedades || [])[0];
+  if (nov && !yaEstaba(previo.novedades, nov, ['fecha', 'titulo'])) {
+    enviarAviso('Novedad del despacho: ' + nov.titulo,
+      'Se ha publicado una novedad (' + nov.fecha + '):\n\n' + nov.titulo +
+      '\n\nEntra en la plataforma para leerla completa.');
+  }
+
+  const eq = nuevo.equipo || {};
+  const eqPrevio = previo.equipo || {};
+
+  const anuncio = (eq.tablon || [])[0];
+  if (anuncio && !yaEstaba(eqPrevio.tablon, anuncio, ['fecha', 'titulo'])) {
+    enviarAviso('Tablón del despacho: ' + anuncio.titulo,
+      'Nuevo anuncio en el tablón (' + anuncio.tipo + ', ' + anuncio.fecha + '):\n\n' +
+      anuncio.titulo + '\n\nEntra en la plataforma para verlo.');
+  }
+
+  const edm = (eq.empleadosDelMes || [])[0];
+  const edmPrevio = (eqPrevio.empleadosDelMes || [])[0];
+  if (edm && (!edmPrevio || edmPrevio.mes !== edm.mes)) {
+    enviarAviso('Empleado/a del mes: ' + edm.nombre,
+      edm.nombre + ' es el empleado/a del mes (' + edm.mes + ').\n\n' +
+      (edm.motivo || '') + '\n\n¡Dale la enhorabuena! Lo tienes en la sección Equipo.');
+  }
+
+  const rk = eq.ranking || {};
+  const rkPrevio = eqPrevio.ranking || {};
+  if (rk.actualizado && rk.actualizado !== rkPrevio.actualizado && (rk.personas || []).length) {
+    enviarAviso('Ranking de formación actualizado',
+      'RRHH ha publicado el ranking (' + rk.actualizado + ').\n\n' +
+      'Primer puesto: ' + rk.personas[0].nombre +
+      '\n\nLa clasificación completa está en la sección Equipo.');
+  }
+}
+
 /* ── Rutas ───────────────────────────────────────────────────── */
 async function atender(peticion, respuesta) {
   const url = new URL(peticion.url, 'http://localhost');
@@ -330,8 +371,10 @@ async function atender(peticion, respuesta) {
     if (fallos.length) return json(respuesta, { ok: false, fallos }, 400);
 
     try {
+      const previo = await leerTodo();
       const ordenados = await guardarTodo(datos);
       console.log(`  Guardado: ${ordenados.length} módulos, ${datos.novedades.length} novedades`);
+      avisarNovedades(previo, datos);
       return json(respuesta, { ok: true, modulos: ordenados.length });
     } catch (e) {
       console.error('  Error al guardar:', e.message);

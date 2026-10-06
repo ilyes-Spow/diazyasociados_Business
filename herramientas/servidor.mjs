@@ -14,6 +14,7 @@ import { readFile, writeFile, rename, mkdir, stat, unlink } from 'node:fs/promis
 import { extname, join, resolve, normalize, sep } from 'node:path';
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { enviarAviso } from './correo.mjs';
 
 const RAIZ = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const ARCHIVO_MURO = join(RAIZ, 'datos', 'muro.json');
@@ -154,6 +155,11 @@ async function atenderMuro(peticion, respuesta, url) {
     lista.unshift(publicacion);
     if (lista.length > MAX_PUBLICACIONES) lista.length = MAX_PUBLICACIONES;
     await guardarMuro(lista);
+    enviarAviso(
+      'Conecta · ' + nombre + ' ha publicado',
+      nombre + ' ha publicado en Conecta (' + tipo + '):\n\n' +
+      (texto || '(foto)') + '\n\nEntra en la plataforma para verlo y reaccionar.'
+    );
     return json(respuesta, { ok: true, publicacion });
   }
 

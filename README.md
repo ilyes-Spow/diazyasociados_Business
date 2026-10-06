@@ -31,13 +31,21 @@ procedimientos y normativa.
 - **Impresión** de módulos en formato limpio.
 - **Vídeos** de YouTube, Vimeo, Loom o archivos propios, con carga diferida.
 - **Panel de administración local** para editar contenidos sin tocar código.
-- **El Muro**: el "twitter" interno del despacho. Cada persona publica
-  sugerencias, quejas, ideas y agradecimientos, con fotos y reacciones.
-  Necesita el servidor (`npm run dev`); las publicaciones viven en
-  `datos/muro.json` y las fotos en `datos/muro-fotos/`, fuera de git. En
-  desarrollo la identidad es declarativa (el nombre que cada uno pone);
-  cuando se active el acceso con Google, se usará la cuenta. Como en el
-  resto de la plataforma: nunca fotos con clientes ni documentos de asuntos.
+- **Conecta**: la red social interna del despacho. Cada persona publica
+  sugerencias, quejas, ideas y agradecimientos, con fotos y reacciones, en
+  un hilo con scroll infinito donde también aparecen los anuncios oficiales
+  (novedades, tablón, empleado del mes y ranking). Necesita el servidor
+  (`npm run dev`); las publicaciones viven en `datos/muro.json` y las fotos
+  en `datos/muro-fotos/`, fuera de git. En desarrollo la identidad es
+  declarativa (el nombre que cada uno pone); cuando se active el acceso con
+  Google, se usará la cuenta. Como en el resto de la plataforma: nunca
+  fotos con clientes ni documentos de asuntos.
+- **Avisos por correo**: cada publicación de Conecta y cada novedad,
+  anuncio, empleado del mes o ranking publicado desde el panel puede
+  avisarse por correo a todo el equipo. Se activa copiando
+  `herramientas/correo.ejemplo.json` a `datos/correo.json` y rellenando la
+  cuenta SMTP (con Gmail: una "contraseña de aplicación") y los
+  destinatarios. Sin ese archivo, los avisos simplemente no se envían.
 
 ---
 

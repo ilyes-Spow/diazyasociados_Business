@@ -14,8 +14,8 @@ import { buscar, resaltar, normalizar, construirIndice } from './buscador.js';
 import {
   vistaInicio, vistaModulo, vistaNovedades, vistaBusqueda,
   vistaNoEncontrada, vistaFormacion, vistaOnboarding, vistaEquipo,
-  vistaModelos, vistaMuro, piezaPublicacion, navegacionLateral,
-  formatearFecha, objetivosDelMes, mesActual
+  vistaModelos, vistaMuro, piezaPublicacion, piezaOficial, elementosOficiales,
+  navegacionLateral, formatearFecha, objetivosDelMes, mesActual
 } from './vistas.js';
 
 /* ── Acceso con Google (Google Identity Services) ────────────
@@ -147,7 +147,7 @@ function pintar() {
     html = vistaFormacion();
   } else if (partes[0] === 'onboarding') {
     html = vistaOnboarding();
-  } else if (partes[0] === 'muro') {
+  } else if (partes[0] === 'conecta' || partes[0] === 'muro') {
     html = vistaMuro();
   } else if (partes[0] === 'modelos') {
     html = vistaModelos();
@@ -185,6 +185,7 @@ function pintar() {
   // resalta Formación, que es el itinerario al que pertenece.
   const seccion = !partes.length ? 'inicio'
     : partes[0] === 'modulo' ? 'formacion'
+    : partes[0] === 'muro' ? 'conecta'
     : partes[0];
   $$('#nav-principal a').forEach((enlace) => {
     if (enlace.dataset.seccion === seccion) enlace.setAttribute('aria-current', 'page');
@@ -194,7 +195,7 @@ function pintar() {
   // La barra lateral solo se muestra dentro de un módulo.
   $('#app').classList.toggle('app--sin-lateral', partes[0] !== 'modulo');
 
-  if (partes[0] === 'muro') cargarMuro();
+  if (partes[0] === 'conecta' || partes[0] === 'muro') cargarMuro();
 
   // Desplazamiento a la lección abierta, o al principio.
   if (partes[0] === 'modulo' && partes[2]) {
@@ -278,8 +279,8 @@ function listaAvisos() {
   }
 
   if (muroUltimaFecha) {
-    filas.push(filaAviso('#/muro', 'campana',
-      'Movimiento en El Muro', 'Publicaciones del equipo',
+    filas.push(filaAviso('#/conecta', 'campana',
+      'Movimiento en Conecta', 'Publicaciones del equipo',
       vistos.hayNuevo('muro', muroUltimaFecha)));
   }
 
@@ -343,7 +344,7 @@ function iniciarNotificaciones() {
   });
 }
 
-/* ── El Muro ─────────────────────────────────────────────────── */
+/* ── Conecta ─────────────────────────────────────────────────── */
 let muroPublicaciones = [];
 let muroUltimaFecha = '';
 let muroTipoElegido = 'sugerencia';
@@ -381,15 +382,58 @@ function claveActual() {
   return a ? a.clave : '';
 }
 
+/* El hilo mezcla publicaciones del equipo y anuncios oficiales,
+   ordenados por fecha, y se pinta por páginas con scroll infinito. */
+const FEED_PAGINA = 8;
+let feedElementos = [];
+let feedMostrados = 0;
+let feedObservador = null;
+
+function construirFeed() {
+  const clave = claveActual();
+  const publicaciones = muroPublicaciones.map((p) => ({
+    fecha: p.fecha, html: piezaPublicacion(p, clave)
+  }));
+  const oficiales = elementosOficiales().map((o) => ({
+    fecha: o.fecha, html: piezaOficial(o)
+  }));
+  feedElementos = publicaciones.concat(oficiales)
+    .sort((a, b) => (a.fecha < b.fecha ? 1 : -1));
+}
+
+function mostrarMasFeed() {
+  const feed = $('#muro-feed');
+  if (!feed || feedMostrados >= feedElementos.length) return;
+  const trozo = feedElementos.slice(feedMostrados, feedMostrados + FEED_PAGINA);
+  feed.insertAdjacentHTML('beforeend', trozo.map((e) => e.html).join(''));
+  feedMostrados += trozo.length;
+  const centinela = $('#muro-centinela');
+  if (centinela) {
+    centinela.textContent = feedMostrados < feedElementos.length ? '' : 'No hay nada más antiguo.';
+  }
+}
+
 function pintarFeedMuro() {
   const feed = $('#muro-feed');
   if (!feed) return;
-  if (!muroPublicaciones.length) {
-    feed.innerHTML = '<p class="objetivos__vacio" style="color:var(--tinta-3)">Todavía no hay publicaciones. Estrena el muro: una sugerencia, una idea, un agradecimiento…</p>';
+  construirFeed();
+  if (!feedElementos.length) {
+    feed.innerHTML = '<p class="objetivos__vacio" style="color:var(--tinta-3)">Todavía no hay nada. Estrena Conecta: una sugerencia, una idea, un agradecimiento…</p>';
     return;
   }
-  const clave = claveActual();
-  feed.innerHTML = muroPublicaciones.map((p) => piezaPublicacion(p, clave)).join('');
+  feed.innerHTML = '';
+  feedMostrados = 0;
+  mostrarMasFeed();
+
+  // Al acercarse al final, se carga la siguiente página sola.
+  const centinela = $('#muro-centinela');
+  if (feedObservador) feedObservador.disconnect();
+  if (centinela && 'IntersectionObserver' in window) {
+    feedObservador = new IntersectionObserver((entradas) => {
+      if (entradas.some((e) => e.isIntersecting)) mostrarMasFeed();
+    }, { rootMargin: '400px' });
+    feedObservador.observe(centinela);
+  }
 }
 
 async function cargarMuro() {
@@ -405,7 +449,7 @@ async function cargarMuro() {
     actualizarPuntoAvisos();
   } catch (e) {
     if (feed) {
-      feed.innerHTML = '<p class="objetivos__vacio" style="color:var(--tinta-3)">El Muro necesita el servidor de la plataforma. Arráncalo con <strong>npm run dev</strong> (o el archivo arrancar.bat) y recarga.</p>';
+      feed.innerHTML = '<p class="objetivos__vacio" style="color:var(--tinta-3)">Conecta necesita el servidor de la plataforma. Arráncalo con <strong>npm run dev</strong> (o el archivo arrancar.bat) y recarga.</p>';
     }
   }
 }
@@ -465,9 +509,9 @@ async function publicarEnMuro() {
     $('#muro-texto').value = '';
     quitarFotoMuro();
     pintarFeedMuro();
-    avisar('Publicado en el muro');
+    avisar('Publicado en Conecta');
   } catch (e) {
-    avisar('No hay conexión con el servidor del muro.');
+    avisar('No hay conexión con el servidor de Conecta.');
   }
 }
 
@@ -487,7 +531,7 @@ async function graciasEnMuro(id) {
     const pieza = document.getElementById('pub-' + id);
     if (pieza) pieza.outerHTML = piezaPublicacion(datos.publicacion, autor.clave);
   } catch (e) {
-    avisar('No hay conexión con el servidor del muro.');
+    avisar('No hay conexión con el servidor de Conecta.');
   }
 }
 
@@ -504,7 +548,7 @@ async function borrarDelMuro(id) {
     pintarFeedMuro();
     avisar('Publicación borrada');
   } catch (e) {
-    avisar('No hay conexión con el servidor del muro.');
+    avisar('No hay conexión con el servidor de Conecta.');
   }
 }
 

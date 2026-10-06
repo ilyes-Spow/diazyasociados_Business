@@ -511,7 +511,7 @@ export function vistaModelos() {
   );
 }
 
-/* ── El Muro: el "twitter" interno del despacho ──────────────── */
+/* ── Conecta: la red social interna del despacho ─────────────── */
 export const TIPOS_MURO = {
   sugerencia:     { texto: 'Sugerencia',     clase: 'muro-tipo--sugerencia' },
   queja:          { texto: 'Queja',          clase: 'muro-tipo--queja' },
@@ -572,6 +572,82 @@ export function piezaPublicacion(pub, miClave) {
   );
 }
 
+/* Anuncios oficiales que se mezclan en el hilo de Conecta. */
+export function elementosOficiales() {
+  const lista = [];
+
+  novedades.forEach((nov) => {
+    lista.push({
+      id: 'nov-' + nov.fecha + '-' + nov.titulo.slice(0, 20),
+      fecha: nov.fecha + 'T12:00:00.000Z',
+      etiqueta: 'Novedad',
+      titulo: nov.titulo,
+      detalle: extracto(nov.md, 180),
+      ruta: '#/novedades'
+    });
+  });
+
+  (equipo.tablon || []).forEach((an) => {
+    const tipo = TIPOS_TABLON[an.tipo] || TIPOS_TABLON.aviso;
+    lista.push({
+      id: 'tab-' + an.fecha + '-' + an.titulo.slice(0, 20),
+      fecha: an.fecha + 'T11:00:00.000Z',
+      etiqueta: tipo.texto,
+      titulo: an.titulo,
+      detalle: extracto(an.md, 180),
+      ruta: '#/equipo'
+    });
+  });
+
+  (equipo.empleadosDelMes || []).forEach((p) => {
+    lista.push({
+      id: 'edm-' + p.mes,
+      fecha: p.mes + '-28T10:00:00.000Z',
+      etiqueta: 'Empleado/a del mes',
+      titulo: p.nombre + ', empleado/a del mes de ' + nombreDeMes(p.mes).split(' de ')[0],
+      detalle: p.motivo || '',
+      ruta: '#/equipo'
+    });
+  });
+
+  const rk = equipo.ranking;
+  if (rk && rk.actualizado && (rk.personas || []).length) {
+    const primero = [...rk.personas].sort((a, b) => (b.puntos || 0) - (a.puntos || 0))[0];
+    lista.push({
+      id: 'rk-' + rk.actualizado,
+      fecha: rk.actualizado + 'T10:30:00.000Z',
+      etiqueta: 'Ranking',
+      titulo: 'Ranking de formación actualizado',
+      detalle: 'Primer puesto: ' + primero.nombre + '. La clasificación completa está en Equipo.',
+      ruta: '#/equipo'
+    });
+  }
+
+  return lista;
+}
+
+export function piezaOficial(item) {
+  return (
+    '<article class="muro-pub muro-pub--oficial">' +
+      '<span class="muro-pub__avatar muro-pub__avatar--oficial">' +
+        '<img src="assets/img/insignia.jpg" alt=""></span>' +
+      '<div class="muro-pub__cuerpo">' +
+        '<div class="muro-pub__cab">' +
+          '<strong>Díaz &amp; Asociados</strong>' +
+          '<span class="muro-tipo muro-tipo--oficial">' + escapar(item.etiqueta) + '</span>' +
+          '<span class="muro-pub__cuando">' + tiempoRelativo(item.fecha) + '</span>' +
+        '</div>' +
+        '<p class="muro-pub__texto"><strong>' + escapar(item.titulo) + '</strong>' +
+          (item.detalle ? '<br>' + escapar(item.detalle) : '') + '</p>' +
+        '<div class="muro-pub__acciones">' +
+          '<a class="muro-oficial__enlace" href="' + escapar(item.ruta) + '">Abrir' +
+            ico('M5 12h14M13 6l6 6-6 6', 'muro-oficial__flecha') + '</a>' +
+        '</div>' +
+      '</div>' +
+    '</article>'
+  );
+}
+
 export function vistaMuro() {
   const autor = autorMuro.de();
   const chips = Object.entries(TIPOS_MURO).map(([id, t], i) =>
@@ -583,8 +659,8 @@ export function vistaMuro() {
     '<div class="envoltorio">' +
       '<div class="itin-cab">' +
         '<div>' +
-          '<h1>El Muro</h1>' +
-          '<p class="pagina-cab__sub">El espacio del equipo: sugerencias, quejas, ideas y agradecimientos. Todo el mundo lee, todo el mundo publica.</p>' +
+          '<h1>Conecta</h1>' +
+          '<p class="pagina-cab__sub">La red del despacho: publica, reacciona y entérate de todo. Los anuncios oficiales también aparecen aquí, en el mismo hilo.</p>' +
         '</div>' +
       '</div>' +
 
@@ -614,8 +690,9 @@ export function vistaMuro() {
       '</div>' +
 
       '<div id="muro-feed" class="muro-feed">' +
-        '<p class="objetivos__vacio" style="color:var(--tinta-3)">Cargando el muro…</p>' +
+        '<p class="objetivos__vacio" style="color:var(--tinta-3)">Cargando…</p>' +
       '</div>' +
+      '<div id="muro-centinela" class="muro-centinela" aria-hidden="true"></div>' +
     '</div>'
   );
 }
@@ -995,8 +1072,8 @@ export function navegacionLateral(rutaActual) {
     '<a class="nav-item" href="#/modelos"' + (rutaActual === '#/modelos' ? ' aria-current="page"' : '') + '>' +
       '<span class="nav-item__n">M</span><span class="nav-item__txt">Modelos de documentos</span>' +
     '</a>' +
-    '<a class="nav-item" href="#/muro"' + (rutaActual === '#/muro' ? ' aria-current="page"' : '') + '>' +
-      '<span class="nav-item__n">Mu</span><span class="nav-item__txt">El Muro</span>' +
+    '<a class="nav-item" href="#/conecta"' + (rutaActual === '#/conecta' ? ' aria-current="page"' : '') + '>' +
+      '<span class="nav-item__n">Co</span><span class="nav-item__txt">Conecta</span>' +
     '</a>' +
   '</div>';
 }

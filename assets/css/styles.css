@@ -1148,6 +1148,31 @@ html[data-tema="oscuro"] .muro-tipo--sugerencia{background:#2c2410;color:var(--o
 }
 .muro-borrar:hover{color:var(--peligro);text-decoration:underline}
 
+/* Hilo centrado, como una app social */
+.muro-redactor,.muro-feed,.muro-centinela{max-width:660px;margin-left:auto;margin-right:auto}
+.muro-redactor{margin-bottom:1.4rem}
+
+/* Anuncios oficiales dentro del hilo */
+.muro-pub--oficial{
+  background:linear-gradient(135deg,color-mix(in srgb,var(--marino-600) 7%,var(--papel)),var(--papel));
+  border-color:color-mix(in srgb,var(--marino-600) 30%,var(--borde));
+}
+.muro-pub__avatar--oficial{background:#fff;overflow:hidden;box-shadow:0 0 0 2px rgba(201,162,39,.4)}
+.muro-pub__avatar--oficial img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+.muro-tipo--oficial{background:var(--marino-700);color:var(--oro-100)}
+.muro-oficial__enlace{
+  display:inline-flex;align-items:center;gap:.35rem;
+  font-size:.8rem;font-weight:700;text-decoration:none;color:var(--oro-600);
+}
+html[data-tema="oscuro"] .muro-oficial__enlace{color:var(--oro-400)}
+.muro-oficial__enlace:hover{text-decoration:underline}
+.muro-oficial__flecha{width:14px;height:14px}
+
+.muro-centinela{
+  padding:1.4rem 0 2rem;text-align:center;
+  font-size:.8rem;color:var(--tinta-3);
+}
+
 /* Modelos de documentos */
 .mod-grupo{margin-bottom:1.8rem}
 .mod-rejilla{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1rem}
