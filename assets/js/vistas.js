@@ -521,17 +521,18 @@ export function vistaEquipo() {
   }
 
   const SEDES = [
-    { foto: 'mexico.jpg', nombre: 'México' },
-    { foto: 'buenos-aires.jpg', nombre: 'Buenos Aires' },
-    { foto: 'londres.jpg', nombre: 'Londres' },
+    { foto: 'madrid.jpg', nombre: 'Madrid' },
+    { foto: 'alicante.jpg', nombre: 'Alicante' },
     { foto: 'valencia.jpg', nombre: 'Valencia' },
-    { foto: 'malaga.jpg', nombre: 'Málaga' },
-    { foto: 'alicante.jpg', nombre: 'Alicante' }
+    { foto: 'marbella.jpg', nombre: 'Marbella' },
+    { foto: 'londres.jpg', nombre: 'Londres' },
+    { foto: 'buenos-aires.jpg', nombre: 'Buenos Aires' },
+    { foto: 'mexico.jpg', nombre: 'México' }
   ];
   const presencia =
     '<section class="sedes-bloque">' +
       '<div class="seccion-tit"><h2>Nuestra presencia</h2></div>' +
-      '<p class="onb-nota" style="margin-top:0">Un despacho internacional: España, Colombia, México, Argentina y Reino Unido.</p>' +
+      '<p class="onb-nota" style="margin-top:0">Oficinas en Madrid, Alicante, Valencia, Marbella y Londres, y presencia en Buenos Aires, Bogotá, Medellín y Ciudad de México.</p>' +
       '<div class="sedes">' +
         '<figure class="sede sede--grande">' +
           '<img src="assets/img/marca/recepcion.jpg" alt="Recepción del despacho" loading="lazy">' +
@@ -990,7 +991,61 @@ export function vistaOnboarding() {
           '<p class="onb-nota">Todo está explicado en el <a href="#/modulo/' + niveles[0].id + '">módulo de bienvenida</a>.</p>' +
         '</section>' +
       '</div>' +
+
+      descubreElDespacho() +
     '</div>'
+  );
+}
+
+/* Bloque "Descubre el despacho" del onboarding: el equipo real,
+   lo que dicen los clientes de ellos y las oficinas. Los datos
+   salen de la web pública del despacho y del ranking. */
+function descubreElDespacho() {
+  const companeros = [...((equipo.ranking && equipo.ranking.personas) || [])];
+  const burbujas = companeros.map((p) =>
+    '<span class="burbuja" title="' + escapar(p.nombre) + '">' +
+      (p.foto ? '<img src="' + escapar(p.foto) + '" alt="">' : escapar(p.iniciales || p.nombre.slice(0, 2).toUpperCase())) +
+    '</span>'
+  ).join('');
+
+  const OFICINAS = [
+    { ciudad: 'Madrid', dir: 'C. Mayor, 3, 1º D Derecha · 28013 Madrid' },
+    { ciudad: 'Alicante', dir: 'Poeta Campos Vasallo, 26, Entresuelo · 03004 Alicante · 865 44 37 63' },
+    { ciudad: 'Valencia', dir: 'Av. del Marqués de Sotelo, 5 · 46002 València' },
+    { ciudad: 'Marbella', dir: 'Av. Ricardo Soriano, 20, Local 4 · 29601 Marbella' },
+    { ciudad: 'Londres', dir: '53 Davies St · London W1K 5JH' },
+    { ciudad: 'Latinoamérica', dir: 'Buenos Aires · Bogotá · Medellín · Ciudad de México' }
+  ];
+  const oficinas = OFICINAS.map((o) =>
+    '<li><strong>' + escapar(o.ciudad) + '</strong><span>' + escapar(o.dir) + '</span></li>'
+  ).join('');
+
+  return (
+    '<section class="descubre">' +
+      '<div class="seccion-tit"><h2>Descubre el despacho</h2></div>' +
+      '<div class="descubre__rejilla">' +
+
+        '<div class="descubre__tarjeta">' +
+          '<h3>' + ico(ICO.usuarios) + 'El equipo que te espera</h3>' +
+          (burbujas ? '<div class="burbujas">' + burbujas + '</div>' : '') +
+          '<p>Pasa el ratón por los avatares y ponles cara en la sección <a href="#/equipo">Equipo</a>: ahí están el ranking, el empleado del mes y el tablón. Y preséntate en <a href="#/conecta">Conecta</a>, que para eso está.</p>' +
+        '</div>' +
+
+        '<div class="descubre__tarjeta">' +
+          '<h3>' + ico(ICO.estrella) + 'Así hablan de tus compañeros</h3>' +
+          '<p class="descubre__nota5">5,0 · más de 280 reseñas en Google</p>' +
+          '<blockquote>&laquo;I want to thank Mercedes &amp; Ilyes for our experience here as they were very helpful.&raquo;<cite>Youcef, cliente</cite></blockquote>' +
+          '<blockquote>&laquo;Excelente atención de Mercedes para nuestra estancia por estudios. [&hellip;] Destaco su amabilidad y su sólido conocimiento técnico.&raquo;<cite>Flávio, cliente</cite></blockquote>' +
+          '<p>Pronto serás tú quien salga en una de estas. Atendemos en español, inglés, francés y ruso.</p>' +
+        '</div>' +
+
+        '<div class="descubre__tarjeta">' +
+          '<h3>' + ico(ICO.columnas) + 'Nuestras oficinas</h3>' +
+          '<ul class="descubre__oficinas">' + oficinas + '</ul>' +
+        '</div>' +
+
+      '</div>' +
+    '</section>'
   );
 }
 
