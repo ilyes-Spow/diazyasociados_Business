@@ -42,15 +42,18 @@ Un despacho puede publicitarse, pero con límites que no aplican a otros sectore
       md: `
 ## Canales activos
 
-> [!PENDIENTE] Ajustar a los canales realmente gestionados, con el responsable y la frecuencia de publicación de cada uno.
+Los canales que el despacho tiene publicados en su web corporativa:
 
-| Canal | Objetivo | Responsable | Frecuencia |
-|---|---|---|---|
-| Web y blog | Captación orgánica y credibilidad | Marketing | Semanal |
-| Ficha de Google Empresa | Captación local y reseñas | Marketing | Continua |
-| LinkedIn | Marca profesional y empresa | Marketing y equipo | Semanal |
-| Newsletter | Fidelización y reactivación | Marketing | Mensual |
-| Redes sociales generalistas | Notoriedad | Marketing | Según plan |
+| Canal | Objetivo |
+|---|---|
+| Web corporativa (con webs por país: España, Colombia, México, Argentina y UK) | Captación, credibilidad y modelos oficiales descargables |
+| Instagram principal | Notoriedad y cercanía |
+| Instagram internacional | Audiencia fuera de España |
+| TikTok | Divulgación y alcance |
+| LinkedIn | Marca profesional y empresa |
+| Facebook | Comunidad y captación local |
+
+> [!PENDIENTE] Confirmar con la persona de marketing el responsable y la frecuencia de publicación de cada canal, y si además se gestionan ficha de Google Empresa y newsletter.
 
 ## Ideas de contenido que funcionan en un despacho
 

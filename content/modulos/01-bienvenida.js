@@ -19,7 +19,9 @@ No hace falta que lo leas todo hoy. Sigue el itinerario en orden y marca cada le
 
 ## Nuestra razón de ser
 
-Somos un despacho de servicios jurídicos que trabaja con particulares y empresas. Lo que nos diferencia no es únicamente el conocimiento técnico: es **la forma en que acompañamos al cliente**.
+Somos **Díaz & Asociados, abogados internacionales**: asesoría legal integral para personas, familias, empresas e inversores, con presencia en **España, Colombia, México, Argentina y Reino Unido**. Nuestras dos grandes áreas son la **extranjería y movilidad internacional** y el **derecho mercantil y corporativo**.
+
+Nuestro lema lo resume: *"Entendemos tu proyecto. Protegemos tu visión. Impulsamos tu futuro."* Lo que nos diferencia no es únicamente el conocimiento técnico: es **la forma en que acompañamos al cliente**, con visión global y trato cercano.
 
 Un cliente que acude a un despacho suele llegar con un problema que le preocupa y con poca información sobre cómo se va a resolver. Nuestro trabajo tiene dos dimensiones inseparables:
 

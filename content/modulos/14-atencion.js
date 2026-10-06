@@ -111,6 +111,15 @@ Buenos:
 
 > [!IMPORTANTE] Si el correo lleva documentación sensible, no la envíes como adjunto abierto: usa enlace protegido o cifrado. Y nunca respondas en caliente: los correos escritos con enfado acaban en un procedimiento.
 
+## Datos de contacto oficiales
+
+Los que figuran en la web corporativa y los únicos que se dan a clientes:
+
+- Correo: **contacto@diazyasociados.es**
+- Teléfono: **+34 625 39 04 53**
+
+Nunca des tu móvil personal ni un correo que no sea corporativo.
+
 ## Mensajería instantánea
 
 > [!PENDIENTE] Definir si el despacho usa WhatsApp Business con clientes y con qué límites.
