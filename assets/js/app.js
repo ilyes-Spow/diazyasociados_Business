@@ -8,13 +8,14 @@ import equipo from '../../content/equipo.js';
 import modelos from '../../content/modelos.js';
 import {
   sesion, tema, progreso, novedadesVistas, vistos, objetivosHechos,
-  almacenamientoDisponible
+  autorMuro, almacenamientoDisponible
 } from './estado.js';
 import { buscar, resaltar, normalizar, construirIndice } from './buscador.js';
 import {
   vistaInicio, vistaModulo, vistaNovedades, vistaBusqueda,
   vistaNoEncontrada, vistaFormacion, vistaOnboarding, vistaEquipo,
-  vistaModelos, navegacionLateral, formatearFecha, objetivosDelMes, mesActual
+  vistaModelos, vistaMuro, piezaPublicacion, navegacionLateral,
+  formatearFecha, objetivosDelMes, mesActual
 } from './vistas.js';
 
 /* ── Acceso con Google (Google Identity Services) ────────────
@@ -146,6 +147,8 @@ function pintar() {
     html = vistaFormacion();
   } else if (partes[0] === 'onboarding') {
     html = vistaOnboarding();
+  } else if (partes[0] === 'muro') {
+    html = vistaMuro();
   } else if (partes[0] === 'modelos') {
     html = vistaModelos();
     if (modelos.length) {
@@ -191,6 +194,8 @@ function pintar() {
   // La barra lateral solo se muestra dentro de un módulo.
   $('#app').classList.toggle('app--sin-lateral', partes[0] !== 'modulo');
 
+  if (partes[0] === 'muro') cargarMuro();
+
   // Desplazamiento a la lección abierta, o al principio.
   if (partes[0] === 'modulo' && partes[2]) {
     const el = document.getElementById('lec-' + partes[2]);
@@ -230,6 +235,7 @@ function hayAvisosNuevos() {
   if (equipo.ranking && equipo.ranking.actualizado && vistos.hayNuevo('ranking', equipo.ranking.actualizado)) return true;
   if (objetivosDelMes().lista.length && vistos.hayNuevo('objetivos', mesActual())) return true;
   if (modelos.length && vistos.hayNuevo('modelos', modeloMasReciente())) return true;
+  if (muroUltimaFecha && vistos.hayNuevo('muro', muroUltimaFecha)) return true;
   return false;
 }
 
@@ -269,6 +275,12 @@ function listaAvisos() {
     filas.push(filaAviso('#/equipo', 'trofeo',
       'Ranking de formación actualizado', 'Publicado por RRHH',
       vistos.hayNuevo('ranking', equipo.ranking.actualizado)));
+  }
+
+  if (muroUltimaFecha) {
+    filas.push(filaAviso('#/muro', 'campana',
+      'Movimiento en El Muro', 'Publicaciones del equipo',
+      vistos.hayNuevo('muro', muroUltimaFecha)));
   }
 
   if (modelos.length && vistos.hayNuevo('modelos', modeloMasReciente())) {
@@ -316,6 +328,7 @@ function iniciarNotificaciones() {
     if (equipo.ranking && equipo.ranking.actualizado) vistos.marcar('ranking', equipo.ranking.actualizado);
     if (objetivosDelMes().lista.length) vistos.marcar('objetivos', mesActual());
     if (modelos.length) vistos.marcar('modelos', modeloMasReciente());
+    if (muroUltimaFecha) vistos.marcar('muro', muroUltimaFecha);
     actualizarPuntoAvisos();
   });
 
@@ -328,6 +341,129 @@ function iniciarNotificaciones() {
   panel.addEventListener('click', (ev) => {
     if (ev.target.closest('a')) cerrar();
   });
+}
+
+/* ── El Muro ─────────────────────────────────────────────────── */
+let muroPublicaciones = [];
+let muroUltimaFecha = '';
+let muroTipoElegido = 'sugerencia';
+
+function claveActual() {
+  const a = autorMuro.de();
+  return a ? a.clave : '';
+}
+
+function pintarFeedMuro() {
+  const feed = $('#muro-feed');
+  if (!feed) return;
+  if (!muroPublicaciones.length) {
+    feed.innerHTML = '<p class="objetivos__vacio" style="color:var(--tinta-3)">Todavía no hay publicaciones. Estrena el muro: una sugerencia, una idea, un agradecimiento…</p>';
+    return;
+  }
+  const clave = claveActual();
+  feed.innerHTML = muroPublicaciones.map((p) => piezaPublicacion(p, clave)).join('');
+}
+
+async function cargarMuro() {
+  const feed = $('#muro-feed');
+  try {
+    const r = await fetch('/api/muro');
+    const datos = await r.json();
+    if (!datos.ok) throw new Error(datos.error || 'respuesta no válida');
+    muroPublicaciones = datos.publicaciones || [];
+    muroUltimaFecha = muroPublicaciones.length ? muroPublicaciones[0].fecha : '';
+    pintarFeedMuro();
+    if (muroUltimaFecha) vistos.marcar('muro', muroUltimaFecha);
+    actualizarPuntoAvisos();
+  } catch (e) {
+    if (feed) {
+      feed.innerHTML = '<p class="objetivos__vacio" style="color:var(--tinta-3)">El Muro necesita el servidor de la plataforma. Arráncalo con <strong>npm run dev</strong> (o el archivo arrancar.bat) y recarga.</p>';
+    }
+  }
+}
+
+/* Solo para saber si hay publicaciones nuevas, al arrancar. */
+async function sondearMuro() {
+  try {
+    const r = await fetch('/api/muro');
+    const datos = await r.json();
+    if (datos.ok && datos.publicaciones && datos.publicaciones.length) {
+      muroUltimaFecha = datos.publicaciones[0].fecha;
+      actualizarPuntoAvisos();
+    }
+  } catch (e) { /* sin servidor: el muro simplemente no avisa */ }
+}
+
+async function publicarEnMuro() {
+  const texto = ($('#muro-texto') ? $('#muro-texto').value : '').trim();
+  if (!texto) { avisar('Escribe algo antes de publicar.'); return; }
+
+  let autor = autorMuro.de();
+  if (!autor) {
+    const campo = $('#muro-nombre');
+    const nombre = campo ? campo.value.trim() : '';
+    if (!nombre) { avisar('Dinos tu nombre para publicar.'); if (campo) campo.focus(); return; }
+    autorMuro.guardarNombre(nombre);
+    autor = autorMuro.de();
+  }
+
+  try {
+    const r = await fetch('/api/muro', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        nombre: autor.nombre, clave: autor.clave,
+        tipo: muroTipoElegido, texto
+      })
+    });
+    const datos = await r.json();
+    if (!datos.ok) { avisar(datos.error || 'No se ha podido publicar.'); return; }
+    muroPublicaciones.unshift(datos.publicacion);
+    muroUltimaFecha = datos.publicacion.fecha;
+    vistos.marcar('muro', muroUltimaFecha);
+    $('#muro-texto').value = '';
+    pintarFeedMuro();
+    avisar('Publicado en el muro');
+  } catch (e) {
+    avisar('No hay conexión con el servidor del muro.');
+  }
+}
+
+async function graciasEnMuro(id) {
+  const autor = autorMuro.de();
+  if (!autor) { avisar('Dinos tu nombre arriba para poder reaccionar.'); return; }
+  try {
+    const r = await fetch('/api/muro/gracias', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ id, clave: autor.clave })
+    });
+    const datos = await r.json();
+    if (!datos.ok) { avisar(datos.error || 'No se ha podido reaccionar.'); return; }
+    const i = muroPublicaciones.findIndex((p) => p.id === id);
+    if (i !== -1) muroPublicaciones[i] = datos.publicacion;
+    const pieza = document.getElementById('pub-' + id);
+    if (pieza) pieza.outerHTML = piezaPublicacion(datos.publicacion, autor.clave);
+  } catch (e) {
+    avisar('No hay conexión con el servidor del muro.');
+  }
+}
+
+async function borrarDelMuro(id) {
+  const autor = autorMuro.de();
+  if (!autor) return;
+  if (!confirm('¿Borrar tu publicación? No se puede deshacer.')) return;
+  try {
+    const r = await fetch('/api/muro?id=' + encodeURIComponent(id) +
+      '&clave=' + encodeURIComponent(autor.clave), { method: 'DELETE' });
+    const datos = await r.json();
+    if (!datos.ok) { avisar(datos.error || 'No se ha podido borrar.'); return; }
+    muroPublicaciones = muroPublicaciones.filter((p) => p.id !== id);
+    pintarFeedMuro();
+    avisar('Publicación borrada');
+  } catch (e) {
+    avisar('No hay conexión con el servidor del muro.');
+  }
 }
 
 /* ── Progreso ────────────────────────────────────────────────── */
@@ -366,6 +502,23 @@ function iniciarDelegacion() {
       reproducir.replaceWith(marco);
       return;
     }
+
+    const chipMuro = ev.target.closest('[data-tipo-muro]');
+    if (chipMuro) {
+      muroTipoElegido = chipMuro.dataset.tipoMuro;
+      $$('#muro-chips .muro-chip').forEach((c) =>
+        c.classList.toggle('muro-chip--activo', c === chipMuro));
+      return;
+    }
+
+    const publicar = ev.target.closest('[data-accion="publicar-muro"]');
+    if (publicar) { publicarEnMuro(); return; }
+
+    const gracias = ev.target.closest('[data-accion="gracias-muro"]');
+    if (gracias) { graciasEnMuro(gracias.dataset.id); return; }
+
+    const borrarPub = ev.target.closest('[data-accion="borrar-muro"]');
+    if (borrarPub) { borrarDelMuro(borrarPub.dataset.id); return; }
 
     const objetivo = ev.target.closest('[data-accion="objetivo"]');
     if (objetivo) {
@@ -523,6 +676,7 @@ function arrancarApp() {
   construirIndice();
 
   iniciarNotificaciones();
+  sondearMuro();
 
   if (!almacenamientoDisponible()) {
     avisar('Tu navegador no guarda datos: el progreso no se conservará al cerrar.');

@@ -11,7 +11,7 @@ import equipo from '../../content/equipo.js';
 import objetivos from '../../content/objetivos.js';
 import modelos from '../../content/modelos.js';
 import { render, escapar } from './markdown.js';
-import { progreso, sesion, objetivosHechos } from './estado.js';
+import { progreso, sesion, objetivosHechos, autorMuro } from './estado.js';
 
 /* ── Utilidades ──────────────────────────────────────────────── */
 const clavesDe = (mod) => mod.lecciones.map((l) => mod.id + '/' + l.id);
@@ -511,6 +511,100 @@ export function vistaModelos() {
   );
 }
 
+/* ── El Muro: el "twitter" interno del despacho ──────────────── */
+export const TIPOS_MURO = {
+  sugerencia:     { texto: 'Sugerencia',     clase: 'muro-tipo--sugerencia' },
+  queja:          { texto: 'Queja',          clase: 'muro-tipo--queja' },
+  idea:           { texto: 'Idea',           clase: 'muro-tipo--idea' },
+  agradecimiento: { texto: 'Agradecimiento', clase: 'muro-tipo--agradecimiento' }
+};
+
+export function tiempoRelativo(iso) {
+  const ms = Date.now() - new Date(iso).getTime();
+  const min = Math.round(ms / 60000);
+  if (min < 1) return 'ahora mismo';
+  if (min < 60) return 'hace ' + min + ' min';
+  const h = Math.round(min / 60);
+  if (h < 24) return 'hace ' + h + ' h';
+  const d = Math.round(h / 24);
+  if (d < 30) return d === 1 ? 'ayer' : 'hace ' + d + ' días';
+  return formatearFecha(String(iso).slice(0, 10));
+}
+
+const inicialesDe = (nombre) => {
+  const partes = String(nombre || '?').trim().split(/\s+/);
+  return ((partes[0] || '')[0] || '?').toUpperCase() +
+         (partes.length > 1 ? ((partes[1] || '')[0] || '').toUpperCase() : '');
+};
+
+export function piezaPublicacion(pub, miClave) {
+  const tipo = TIPOS_MURO[pub.tipo] || TIPOS_MURO.sugerencia;
+  const gracias = Array.isArray(pub.gracias) ? pub.gracias : [];
+  const mio = pub.clave === miClave;
+  const yaGracias = gracias.includes(miClave);
+  return (
+    '<article class="muro-pub" id="pub-' + escapar(pub.id) + '">' +
+      '<span class="muro-pub__avatar">' + escapar(inicialesDe(pub.nombre)) + '</span>' +
+      '<div class="muro-pub__cuerpo">' +
+        '<div class="muro-pub__cab">' +
+          '<strong>' + escapar(pub.nombre) + '</strong>' +
+          '<span class="muro-tipo ' + tipo.clase + '">' + tipo.texto + '</span>' +
+          '<span class="muro-pub__cuando">' + tiempoRelativo(pub.fecha) + '</span>' +
+        '</div>' +
+        '<p class="muro-pub__texto">' + escapar(pub.texto) + '</p>' +
+        '<div class="muro-pub__acciones">' +
+          '<button type="button" class="muro-gracias' + (yaGracias ? ' muro-gracias--activo' : '') +
+            '" data-accion="gracias-muro" data-id="' + escapar(pub.id) + '">' +
+            '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s-7.5-4.6-9.5-9A5.2 5.2 0 0112 6.6a5.2 5.2 0 019.5 4.9c-2 4.4-9.5 9-9.5 9z"/></svg>' +
+            '<span>' + (gracias.length || '') + '</span>' +
+          '</button>' +
+          (mio
+            ? '<button type="button" class="muro-borrar" data-accion="borrar-muro" data-id="' +
+                escapar(pub.id) + '">Borrar</button>'
+            : '') +
+        '</div>' +
+      '</div>' +
+    '</article>'
+  );
+}
+
+export function vistaMuro() {
+  const autor = autorMuro.de();
+  const chips = Object.entries(TIPOS_MURO).map(([id, t], i) =>
+    '<button type="button" class="muro-chip' + (i === 0 ? ' muro-chip--activo' : '') +
+      '" data-tipo-muro="' + id + '">' + t.texto + '</button>'
+  ).join('');
+
+  return (
+    '<div class="envoltorio">' +
+      '<div class="itin-cab">' +
+        '<div>' +
+          '<h1>El Muro</h1>' +
+          '<p class="pagina-cab__sub">El espacio del equipo: sugerencias, quejas, ideas y agradecimientos. Todo el mundo lee, todo el mundo publica.</p>' +
+        '</div>' +
+      '</div>' +
+
+      '<div class="muro-redactor">' +
+        '<span class="muro-pub__avatar">' + escapar(inicialesDe(autor ? autor.nombre : '?')) + '</span>' +
+        '<div class="muro-redactor__cuerpo">' +
+          (autor
+            ? '<div class="muro-redactor__quien">Publicas como <strong>' + escapar(autor.nombre) + '</strong></div>'
+            : '<input type="text" id="muro-nombre" class="muro-redactor__nombre" maxlength="60" placeholder="Tu nombre (solo la primera vez)">') +
+          '<textarea id="muro-texto" maxlength="500" rows="3" placeholder="¿Qué quieres contarle al despacho?"></textarea>' +
+          '<div class="muro-redactor__pie">' +
+            '<div class="muro-chips" id="muro-chips">' + chips + '</div>' +
+            '<button type="button" class="btn btn--oro" data-accion="publicar-muro">Publicar</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+
+      '<div id="muro-feed" class="muro-feed">' +
+        '<p class="objetivos__vacio" style="color:var(--tinta-3)">Cargando el muro…</p>' +
+      '</div>' +
+    '</div>'
+  );
+}
+
 /* ── Itinerario de formación ─────────────────────────────────── */
 export function vistaFormacion() {
   const hechas = progreso.contar(LECCIONES.map((l) => l.clave));
@@ -885,6 +979,9 @@ export function navegacionLateral(rutaActual) {
     '</a>' +
     '<a class="nav-item" href="#/modelos"' + (rutaActual === '#/modelos' ? ' aria-current="page"' : '') + '>' +
       '<span class="nav-item__n">M</span><span class="nav-item__txt">Modelos de documentos</span>' +
+    '</a>' +
+    '<a class="nav-item" href="#/muro"' + (rutaActual === '#/muro' ? ' aria-current="page"' : '') + '>' +
+      '<span class="nav-item__n">Mu</span><span class="nav-item__txt">El Muro</span>' +
     '</a>' +
   '</div>';
 }

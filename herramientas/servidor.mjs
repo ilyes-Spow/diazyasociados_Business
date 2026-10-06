@@ -1,17 +1,24 @@
 /* ===============================================================
-   servidor.mjs - Servidor de desarrollo, sin dependencias
+   servidor.mjs - Servidor de la plataforma, sin dependencias
    ---------------------------------------------------------------
    Uso:  npm run dev        (o: node herramientas/servidor.mjs)
    Opciones:  --puerto 3000
+
+   Además de servir los archivos, expone la API del Muro del
+   despacho (publicaciones del equipo) en /api/muro. Los datos se
+   guardan en datos/muro.json, fuera del control de versiones.
    =============================================================== */
 
 import { createServer } from 'node:http';
-import { readFile, stat } from 'node:fs/promises';
+import { readFile, writeFile, rename, mkdir, stat } from 'node:fs/promises';
 import { extname, join, resolve, normalize, sep } from 'node:path';
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const RAIZ = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const ARCHIVO_MURO = join(RAIZ, 'datos', 'muro.json');
+const MAX_PUBLICACIONES = 500;
+const TIPOS_MURO = new Set(['sugerencia', 'queja', 'idea', 'agradecimiento']);
 
 const argumento = (nombre, pordefecto) => {
   const i = process.argv.indexOf('--' + nombre);
@@ -49,9 +56,128 @@ const TIPOS = {
   '.rtf':  'application/rtf'
 };
 
+/* ── El Muro: publicaciones del equipo ───────────────────────── */
+async function leerMuro() {
+  try {
+    const bruto = await readFile(ARCHIVO_MURO, 'utf8');
+    const lista = JSON.parse(bruto);
+    return Array.isArray(lista) ? lista : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+async function guardarMuro(lista) {
+  await mkdir(dirname(ARCHIVO_MURO), { recursive: true });
+  const temporal = ARCHIVO_MURO + '.tmp';
+  await writeFile(temporal, JSON.stringify(lista, null, 2), 'utf8');
+  await rename(temporal, ARCHIVO_MURO);
+}
+
+function cuerpo(peticion, limite = 64 * 1024) {
+  return new Promise((cumplir, fallar) => {
+    const trozos = [];
+    let total = 0;
+    peticion.on('data', (t) => {
+      total += t.length;
+      if (total > limite) { fallar(new Error('demasiado grande')); peticion.destroy(); return; }
+      trozos.push(t);
+    });
+    peticion.on('end', () => cumplir(Buffer.concat(trozos)));
+    peticion.on('error', fallar);
+  });
+}
+
+const json = (respuesta, datos, codigo = 200) => {
+  respuesta.writeHead(codigo, { 'content-type': TIPOS['.json'], 'cache-control': 'no-store' });
+  respuesta.end(JSON.stringify(datos));
+};
+
+const limpiar = (v, max) => String(v || '').replace(/\s+/g, ' ').trim().slice(0, max);
+
+async function atenderMuro(peticion, respuesta, url) {
+  if (peticion.method === 'GET') {
+    return json(respuesta, { ok: true, publicaciones: await leerMuro() });
+  }
+
+  if (peticion.method === 'POST' && url.pathname === '/api/muro') {
+    let datos;
+    try {
+      datos = JSON.parse((await cuerpo(peticion)).toString('utf8'));
+    } catch (e) {
+      return json(respuesta, { ok: false, error: 'No se ha podido leer lo enviado.' }, 400);
+    }
+    const nombre = limpiar(datos.nombre, 60);
+    const clave = limpiar(datos.clave, 120).toLowerCase();
+    const tipo = String(datos.tipo || '');
+    const texto = String(datos.texto || '').trim().slice(0, 500);
+    if (!nombre || !clave) return json(respuesta, { ok: false, error: 'Falta el nombre.' }, 400);
+    if (!TIPOS_MURO.has(tipo)) return json(respuesta, { ok: false, error: 'Tipo no válido.' }, 400);
+    if (!texto) return json(respuesta, { ok: false, error: 'Escribe algo antes de publicar.' }, 400);
+
+    const lista = await leerMuro();
+    const publicacion = {
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+      fecha: new Date().toISOString(),
+      nombre,
+      clave,
+      tipo,
+      texto,
+      gracias: []
+    };
+    lista.unshift(publicacion);
+    if (lista.length > MAX_PUBLICACIONES) lista.length = MAX_PUBLICACIONES;
+    await guardarMuro(lista);
+    return json(respuesta, { ok: true, publicacion });
+  }
+
+  if (peticion.method === 'POST' && url.pathname === '/api/muro/gracias') {
+    let datos;
+    try {
+      datos = JSON.parse((await cuerpo(peticion)).toString('utf8'));
+    } catch (e) {
+      return json(respuesta, { ok: false, error: 'No se ha podido leer lo enviado.' }, 400);
+    }
+    const clave = limpiar(datos.clave, 120).toLowerCase();
+    if (!clave) return json(respuesta, { ok: false, error: 'Falta la identidad.' }, 400);
+    const lista = await leerMuro();
+    const publicacion = lista.find((p) => p.id === datos.id);
+    if (!publicacion) return json(respuesta, { ok: false, error: 'No existe.' }, 404);
+    const i = publicacion.gracias.indexOf(clave);
+    if (i === -1) publicacion.gracias.push(clave);
+    else publicacion.gracias.splice(i, 1);
+    await guardarMuro(lista);
+    return json(respuesta, { ok: true, publicacion });
+  }
+
+  if (peticion.method === 'DELETE') {
+    const id = url.searchParams.get('id') || '';
+    const clave = limpiar(url.searchParams.get('clave'), 120).toLowerCase();
+    const lista = await leerMuro();
+    const publicacion = lista.find((p) => p.id === id);
+    if (!publicacion) return json(respuesta, { ok: false, error: 'No existe.' }, 404);
+    if (publicacion.clave !== clave) {
+      return json(respuesta, { ok: false, error: 'Solo puedes borrar tus propias publicaciones.' }, 403);
+    }
+    await guardarMuro(lista.filter((p) => p.id !== id));
+    return json(respuesta, { ok: true });
+  }
+
+  return json(respuesta, { ok: false, error: 'Método no admitido.' }, 405);
+}
+
 const servidor = createServer(async (peticion, respuesta) => {
   const url = new URL(peticion.url, 'http://localhost');
   let ruta = decodeURIComponent(url.pathname);
+
+  if (ruta === '/api/muro' || ruta.startsWith('/api/muro/')) {
+    try {
+      return await atenderMuro(peticion, respuesta, url);
+    } catch (e) {
+      return json(respuesta, { ok: false, error: 'Error del servidor: ' + e.message }, 500);
+    }
+  }
+
   if (ruta.endsWith('/')) ruta += 'index.html';
 
   // Se impide salir del directorio del proyecto.
@@ -87,7 +213,6 @@ servidor.listen(PUERTO, () => {
   console.log('  Plataforma de formación · Díaz y Asociados');
   console.log('  ------------------------------------------');
   console.log('  Abre  http://localhost:' + PUERTO);
-  console.log('  Clave de acceso: Onboarding');
   console.log('');
   console.log('  Ctrl+C para detener.');
   console.log('');

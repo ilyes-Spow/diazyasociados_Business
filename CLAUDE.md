@@ -19,8 +19,11 @@ módulos ES.
 - `assets/js/markdown.js` es un renderizador propio de un subconjunto de
   Markdown. No hay librería externa.
 - `assets/js/vistas.js` genera el HTML de cada pantalla como cadena de texto.
-- `assets/js/app.js` contiene el enrutador por hash, la puerta de acceso y la
-  delegación de eventos sobre `#vista`.
+- `assets/js/app.js` contiene el enrutador por hash, la pantalla de acceso con
+  Google, la delegación de eventos sobre `#vista` y el cliente del Muro.
+- `herramientas/servidor.mjs` sirve los archivos y expone la API del Muro
+  (`/api/muro`): publicaciones del equipo guardadas en `datos/muro.json`,
+  fuera del control de versiones. Es la única parte que necesita servidor.
 - `assets/js/estado.js` encapsula todo el acceso a `localStorage`, tolerante a
   fallos (navegación privada, almacenamiento lleno).
 - `herramientas/contenido.mjs` lee `content/` importando los módulos reales y

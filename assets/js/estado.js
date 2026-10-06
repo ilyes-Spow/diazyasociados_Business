@@ -12,7 +12,8 @@ const K = {
   progreso:   PREFIJO + 'progreso',
   novedades:  PREFIJO + 'novedades.vistas',
   vistos:     PREFIJO + 'vistos',
-  objetivos:  PREFIJO + 'objetivos'
+  objetivos:  PREFIJO + 'objetivos',
+  muroNombre: PREFIJO + 'muro.nombre'
 };
 
 /* Lectura y escritura tolerantes a fallos (modo privado, cookies
@@ -86,6 +87,24 @@ export const vistos = {
   },
   hayNuevo(tipo, valor) {
     return Boolean(valor) && String(valor) > this.de(tipo);
+  }
+};
+
+/* ── Identidad para el Muro ──────────────────────────────────── */
+/* Con sesión de Google se usan su nombre y su correo. Sin ella
+   (fase de desarrollo), el nombre se pide una vez y se recuerda. */
+export const autorMuro = {
+  de() {
+    const u = sesion.usuario() || {};
+    const nombre = (u.nombre || leer(K.muroNombre, '') || '').trim();
+    if (!nombre) return null;
+    const clave = u.correo
+      ? u.correo.toLowerCase()
+      : 'nombre:' + nombre.toLowerCase();
+    return { nombre, clave };
+  },
+  guardarNombre(nombre) {
+    escribir(K.muroNombre, String(nombre || '').trim());
   }
 };
 
