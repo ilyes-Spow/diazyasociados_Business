@@ -347,6 +347,34 @@ function iniciarNotificaciones() {
 let muroPublicaciones = [];
 let muroUltimaFecha = '';
 let muroTipoElegido = 'sugerencia';
+let muroFoto = null; // File elegido para la próxima publicación
+
+function quitarFotoMuro() {
+  muroFoto = null;
+  const caja = $('#muro-adjunto');
+  const img = $('#muro-adjunto-img');
+  const campo = $('#muro-foto');
+  if (img && img.src) { try { URL.revokeObjectURL(img.src); } catch (e) { /* nada */ } img.removeAttribute('src'); }
+  if (caja) caja.hidden = true;
+  if (campo) campo.value = '';
+}
+
+function elegirFotoMuro(campo) {
+  const archivo = campo.files && campo.files[0];
+  if (!archivo) return;
+  if (archivo.size > 6 * 1024 * 1024) {
+    avisar('La foto no puede superar los 6 MB.');
+    campo.value = '';
+    return;
+  }
+  muroFoto = archivo;
+  const caja = $('#muro-adjunto');
+  const img = $('#muro-adjunto-img');
+  if (caja && img) {
+    img.src = URL.createObjectURL(archivo);
+    caja.hidden = false;
+  }
+}
 
 function claveActual() {
   const a = autorMuro.de();
@@ -396,7 +424,7 @@ async function sondearMuro() {
 
 async function publicarEnMuro() {
   const texto = ($('#muro-texto') ? $('#muro-texto').value : '').trim();
-  if (!texto) { avisar('Escribe algo antes de publicar.'); return; }
+  if (!texto && !muroFoto) { avisar('Escribe algo o adjunta una foto.'); return; }
 
   let autor = autorMuro.de();
   if (!autor) {
@@ -408,12 +436,25 @@ async function publicarEnMuro() {
   }
 
   try {
+    // Primero la foto, si la hay; después la publicación que la referencia.
+    let foto = '';
+    if (muroFoto) {
+      const rf = await fetch('/api/muro/foto?nombre=' + encodeURIComponent(muroFoto.name), {
+        method: 'POST',
+        headers: { 'content-type': 'application/octet-stream' },
+        body: muroFoto
+      });
+      const datosFoto = await rf.json();
+      if (!datosFoto.ok) { avisar(datosFoto.error || 'No se ha podido subir la foto.'); return; }
+      foto = datosFoto.ruta;
+    }
+
     const r = await fetch('/api/muro', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
         nombre: autor.nombre, clave: autor.clave,
-        tipo: muroTipoElegido, texto
+        tipo: muroTipoElegido, texto, foto
       })
     });
     const datos = await r.json();
@@ -422,6 +463,7 @@ async function publicarEnMuro() {
     muroUltimaFecha = datos.publicacion.fecha;
     vistos.marcar('muro', muroUltimaFecha);
     $('#muro-texto').value = '';
+    quitarFotoMuro();
     pintarFeedMuro();
     avisar('Publicado en el muro');
   } catch (e) {
@@ -478,6 +520,10 @@ function actualizarProgreso() {
 
 /* ── Interacción dentro de una vista ─────────────────────────── */
 function iniciarDelegacion() {
+  $('#vista').addEventListener('change', (ev) => {
+    if (ev.target.id === 'muro-foto') elegirFotoMuro(ev.target);
+  });
+
   $('#vista').addEventListener('click', (ev) => {
     const desplegar = ev.target.closest('[data-accion="desplegar"]');
     if (desplegar) {
@@ -513,6 +559,9 @@ function iniciarDelegacion() {
 
     const publicar = ev.target.closest('[data-accion="publicar-muro"]');
     if (publicar) { publicarEnMuro(); return; }
+
+    const quitarFoto = ev.target.closest('[data-accion="quitar-foto-muro"]');
+    if (quitarFoto) { quitarFotoMuro(); return; }
 
     const gracias = ev.target.closest('[data-accion="gracias-muro"]');
     if (gracias) { graciasEnMuro(gracias.dataset.id); return; }

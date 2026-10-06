@@ -551,7 +551,11 @@ export function piezaPublicacion(pub, miClave) {
           '<span class="muro-tipo ' + tipo.clase + '">' + tipo.texto + '</span>' +
           '<span class="muro-pub__cuando">' + tiempoRelativo(pub.fecha) + '</span>' +
         '</div>' +
-        '<p class="muro-pub__texto">' + escapar(pub.texto) + '</p>' +
+        (pub.texto ? '<p class="muro-pub__texto">' + escapar(pub.texto) + '</p>' : '') +
+        (pub.foto
+          ? '<a class="muro-pub__foto" href="' + escapar(pub.foto) + '" target="_blank" rel="noopener">' +
+              '<img src="' + escapar(pub.foto) + '" alt="Foto de la publicación" loading="lazy"></a>'
+          : '') +
         '<div class="muro-pub__acciones">' +
           '<button type="button" class="muro-gracias' + (yaGracias ? ' muro-gracias--activo' : '') +
             '" data-accion="gracias-muro" data-id="' + escapar(pub.id) + '">' +
@@ -591,9 +595,20 @@ export function vistaMuro() {
             ? '<div class="muro-redactor__quien">Publicas como <strong>' + escapar(autor.nombre) + '</strong></div>'
             : '<input type="text" id="muro-nombre" class="muro-redactor__nombre" maxlength="60" placeholder="Tu nombre (solo la primera vez)">') +
           '<textarea id="muro-texto" maxlength="500" rows="3" placeholder="¿Qué quieres contarle al despacho?"></textarea>' +
+          '<div class="muro-adjunto" id="muro-adjunto" hidden>' +
+            '<img id="muro-adjunto-img" alt="Foto adjunta">' +
+            '<button type="button" class="muro-adjunto__quitar" data-accion="quitar-foto-muro" aria-label="Quitar la foto">&times;</button>' +
+          '</div>' +
           '<div class="muro-redactor__pie">' +
             '<div class="muro-chips" id="muro-chips">' + chips + '</div>' +
-            '<button type="button" class="btn btn--oro" data-accion="publicar-muro">Publicar</button>' +
+            '<div class="muro-redactor__botones">' +
+              '<label class="muro-foto-boton" title="Adjuntar una foto">' +
+                '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="15" rx="2"/><path d="M3 16l5-5 5 5.5"/><circle cx="15.5" cy="10" r="1.6"/><path d="M13.5 17l3.5-3.5 4 4"/></svg>' +
+                '<span>Foto</span>' +
+                '<input type="file" id="muro-foto" accept="image/jpeg,image/png,image/webp,image/gif" hidden>' +
+              '</label>' +
+              '<button type="button" class="btn btn--oro" data-accion="publicar-muro">Publicar</button>' +
+            '</div>' +
           '</div>' +
         '</div>' +
       '</div>' +

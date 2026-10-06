@@ -1068,6 +1068,26 @@ html[data-tema="oscuro"] .rk-fila__puntos{color:var(--oro-400)}
   outline:none;border-color:var(--oro-500);box-shadow:0 0 0 3.5px rgba(201,162,39,.16);
 }
 .muro-redactor__pie{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.muro-redactor__botones{display:flex;align-items:center;gap:.6rem}
+.muro-foto-boton{
+  display:inline-flex;align-items:center;gap:.4rem;padding:.4rem .8rem;
+  border:1.5px solid var(--borde);border-radius:99px;cursor:pointer;
+  font-size:.8rem;font-weight:600;color:var(--tinta-3);
+  transition:all var(--trans);
+}
+.muro-foto-boton:hover{border-color:var(--oro-500);color:var(--tinta)}
+.muro-foto-boton svg{width:16px;height:16px}
+.muro-adjunto{position:relative;align-self:flex-start}
+.muro-adjunto img{
+  display:block;max-width:220px;max-height:160px;border-radius:var(--r-m);
+  border:1px solid var(--borde);object-fit:cover;
+}
+.muro-adjunto__quitar{
+  position:absolute;top:-8px;right:-8px;width:24px;height:24px;
+  border:0;border-radius:50%;background:var(--marino-800);color:#fff;
+  font-size:15px;line-height:1;cursor:pointer;box-shadow:var(--sombra-1);
+}
+.muro-adjunto__quitar:hover{background:var(--peligro)}
 .muro-chips{display:flex;gap:.4rem;flex-wrap:wrap}
 .muro-chip{
   padding:.3rem .75rem;border-radius:99px;border:1.5px solid var(--borde);
@@ -1104,6 +1124,13 @@ html[data-tema="oscuro"] .muro-tipo--sugerencia{background:#2c2410;color:var(--o
 .muro-tipo--idea{background:var(--info-suave);color:var(--info)}
 .muro-tipo--agradecimiento{background:var(--ok-suave);color:var(--ok)}
 .muro-pub__texto{margin:.3rem 0 .5rem;font-size:.93rem;line-height:1.6;overflow-wrap:break-word}
+.muro-pub__foto{display:block;margin:.3rem 0 .55rem;max-width:420px}
+.muro-pub__foto img{
+  display:block;width:100%;max-height:340px;object-fit:cover;
+  border-radius:var(--r-m);border:1px solid var(--borde);
+  transition:transform var(--trans);
+}
+.muro-pub__foto:hover img{transform:scale(1.015)}
 .muro-pub__acciones{display:flex;align-items:center;gap:1rem}
 .muro-gracias{
   display:inline-flex;align-items:center;gap:.35rem;padding:.25rem .6rem;

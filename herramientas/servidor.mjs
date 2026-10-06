@@ -10,15 +10,18 @@
    =============================================================== */
 
 import { createServer } from 'node:http';
-import { readFile, writeFile, rename, mkdir, stat } from 'node:fs/promises';
+import { readFile, writeFile, rename, mkdir, stat, unlink } from 'node:fs/promises';
 import { extname, join, resolve, normalize, sep } from 'node:path';
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const RAIZ = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const ARCHIVO_MURO = join(RAIZ, 'datos', 'muro.json');
+const DIR_FOTOS_MURO = join(RAIZ, 'datos', 'muro-fotos');
 const MAX_PUBLICACIONES = 500;
 const TIPOS_MURO = new Set(['sugerencia', 'queja', 'idea', 'agradecimiento']);
+const EXTENSIONES_FOTO_MURO = new Set(['.jpg', '.jpeg', '.png', '.webp', '.gif']);
+const LIMITE_FOTO_MURO = 6 * 1024 * 1024; // 6 MB
 
 const argumento = (nombre, pordefecto) => {
   const i = process.argv.indexOf('--' + nombre);
@@ -100,6 +103,24 @@ async function atenderMuro(peticion, respuesta, url) {
     return json(respuesta, { ok: true, publicaciones: await leerMuro() });
   }
 
+  if (peticion.method === 'POST' && url.pathname === '/api/muro/foto') {
+    const propuesto = url.searchParams.get('nombre') || '';
+    const extension = extname(propuesto).toLowerCase();
+    if (!EXTENSIONES_FOTO_MURO.has(extension)) {
+      return json(respuesta, { ok: false, error: 'Formato no admitido. Usa .jpg, .png, .webp o .gif.' }, 400);
+    }
+    try {
+      const datos = await cuerpo(peticion, LIMITE_FOTO_MURO);
+      if (!datos.length) return json(respuesta, { ok: false, error: 'La imagen llegó vacía.' }, 400);
+      const nombre = Date.now().toString(36) + Math.random().toString(36).slice(2, 6) + extension;
+      await mkdir(DIR_FOTOS_MURO, { recursive: true });
+      await writeFile(join(DIR_FOTOS_MURO, nombre), datos);
+      return json(respuesta, { ok: true, ruta: 'datos/muro-fotos/' + nombre });
+    } catch (e) {
+      return json(respuesta, { ok: false, error: 'La imagen supera los 6 MB o no se pudo guardar.' }, 400);
+    }
+  }
+
   if (peticion.method === 'POST' && url.pathname === '/api/muro') {
     let datos;
     try {
@@ -111,9 +132,13 @@ async function atenderMuro(peticion, respuesta, url) {
     const clave = limpiar(datos.clave, 120).toLowerCase();
     const tipo = String(datos.tipo || '');
     const texto = String(datos.texto || '').trim().slice(0, 500);
+    const foto = String(datos.foto || '');
     if (!nombre || !clave) return json(respuesta, { ok: false, error: 'Falta el nombre.' }, 400);
     if (!TIPOS_MURO.has(tipo)) return json(respuesta, { ok: false, error: 'Tipo no válido.' }, 400);
-    if (!texto) return json(respuesta, { ok: false, error: 'Escribe algo antes de publicar.' }, 400);
+    if (!texto && !foto) return json(respuesta, { ok: false, error: 'Escribe algo o adjunta una foto antes de publicar.' }, 400);
+    if (foto && !/^datos\/muro-fotos\/[a-z0-9]+\.(jpg|jpeg|png|webp|gif)$/.test(foto)) {
+      return json(respuesta, { ok: false, error: 'Foto no válida.' }, 400);
+    }
 
     const lista = await leerMuro();
     const publicacion = {
@@ -123,6 +148,7 @@ async function atenderMuro(peticion, respuesta, url) {
       clave,
       tipo,
       texto,
+      foto,
       gracias: []
     };
     lista.unshift(publicacion);
@@ -160,6 +186,9 @@ async function atenderMuro(peticion, respuesta, url) {
       return json(respuesta, { ok: false, error: 'Solo puedes borrar tus propias publicaciones.' }, 403);
     }
     await guardarMuro(lista.filter((p) => p.id !== id));
+    if (publicacion.foto) {
+      try { await unlink(join(RAIZ, publicacion.foto)); } catch (e) { /* ya no existe */ }
+    }
     return json(respuesta, { ok: true });
   }
 

@@ -32,10 +32,12 @@ procedimientos y normativa.
 - **Vídeos** de YouTube, Vimeo, Loom o archivos propios, con carga diferida.
 - **Panel de administración local** para editar contenidos sin tocar código.
 - **El Muro**: el "twitter" interno del despacho. Cada persona publica
-  sugerencias, quejas, ideas y agradecimientos, con reacciones. Necesita el
-  servidor (`npm run dev`); las publicaciones viven en `datos/muro.json`,
-  fuera de git. En desarrollo la identidad es declarativa (el nombre que
-  cada uno pone); cuando se active el acceso con Google, se usará la cuenta.
+  sugerencias, quejas, ideas y agradecimientos, con fotos y reacciones.
+  Necesita el servidor (`npm run dev`); las publicaciones viven en
+  `datos/muro.json` y las fotos en `datos/muro-fotos/`, fuera de git. En
+  desarrollo la identidad es declarativa (el nombre que cada uno pone);
+  cuando se active el acceso con Google, se usará la cuenta. Como en el
+  resto de la plataforma: nunca fotos con clientes ni documentos de asuntos.
 
 ---
 
