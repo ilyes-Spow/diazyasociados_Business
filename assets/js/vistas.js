@@ -247,12 +247,12 @@ export function vistaInicio() {
             '<circle cx="60" cy="60" r="52" fill="none" stroke="var(--fondo-alt)" stroke-width="11"/>' +
             '<circle cx="60" cy="60" r="52" fill="none" stroke="var(--oro-500)" stroke-width="11" stroke-linecap="round" ' +
               'stroke-dasharray="' + arco + ' ' + Math.round(circun) + '" transform="rotate(-90 60 60)"/>' +
-            '<text x="60" y="57" text-anchor="middle" class="panel-anillo__pct">' + pct + '%</text>' +
+            '<text x="60" y="57" text-anchor="middle" class="panel-anillo__pct" data-contar="' + pct + '" data-sufijo="%">' + pct + '%</text>' +
             '<text x="60" y="76" text-anchor="middle" class="panel-anillo__et">completado</text>' +
           '</svg>' +
           '<strong>Tu progreso general</strong>' +
           '<span>' + modulosHechos + (modulosHechos === 1 ? ' módulo completado' : ' módulos completados') +
-            ' · ' + puntos + ' puntos</span>' +
+            ' · <b data-contar="' + puntos + '">' + puntos + '</b> puntos</span>' +
         '</div>' +
       '</div>' +
 
@@ -888,8 +888,8 @@ export function vistaFormacion() {
         '</div>' +
         '<div class="itin-datos">' +
           '<span><small>Completados</small><strong>' + modulosHechos + ' / ' + MODULOS.length + '</strong></span>' +
-          '<span><small>Puntos</small><strong class="itin-datos__oro">' + puntos + '</strong></span>' +
-          '<span><small>Insignias</small><strong>' + nInsignias + '</strong></span>' +
+          '<span><small>Puntos</small><strong class="itin-datos__oro" data-contar="' + puntos + '">' + puntos + '</strong></span>' +
+          '<span><small>Insignias</small><strong data-contar="' + nInsignias + '">' + nInsignias + '</strong></span>' +
         '</div>' +
       '</div>' +
       grupos +
@@ -959,7 +959,7 @@ export function vistaOnboarding() {
           '</div>' +
           '<div class="onb-xp">' +
             '<span class="onb-xp__fila"><span>' + (terminado ? 'Onboarding completado' : 'Nivel ' + nivelActual + ' de ' + niveles.length) + '</span>' +
-              '<b>' + xpGanada + ' / ' + xpTotal + ' XP</b></span>' +
+              '<b><span data-contar="' + xpGanada + '">' + xpGanada + '</span> / ' + xpTotal + ' XP</b></span>' +
             '<span class="onb-xp__barra"><span style="width:' + pctXp + '%"></span></span>' +
           '</div>' +
         '</div>' +

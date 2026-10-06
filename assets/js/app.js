@@ -202,6 +202,8 @@ function pintar() {
   // La barra lateral solo se muestra dentro de un módulo.
   $('#app').classList.toggle('app--sin-lateral', partes[0] !== 'modulo');
 
+  animarContadores();
+
   if (partes[0] === 'conecta' || partes[0] === 'muro') cargarMuro();
 
   // Desplazamiento a la lección abierta, o al principio.
@@ -210,6 +212,24 @@ function pintar() {
     if (el) { desplazarA(el); return; }
   }
   window.scrollTo(0, 0);
+}
+
+/* Números que suben hasta su valor al pintar la vista. */
+function animarContadores() {
+  if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  $$('[data-contar]').forEach((el) => {
+    const fin = Number(el.dataset.contar) || 0;
+    const sufijo = el.dataset.sufijo || '';
+    const duracion = 750;
+    const inicio = performance.now();
+    const paso = (t) => {
+      const p = Math.min(1, (t - inicio) / duracion);
+      const suave = 1 - Math.pow(1 - p, 3);
+      el.textContent = Math.round(fin * suave) + sufijo;
+      if (p < 1) requestAnimationFrame(paso);
+    };
+    requestAnimationFrame(paso);
+  });
 }
 
 /* Desplaza dejando libre la cabecera fija. */
