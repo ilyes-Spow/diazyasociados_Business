@@ -21,6 +21,8 @@ import { extname, join, normalize, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { RAIZ, leerTodo, guardarTodo, aIdentificador } from './contenido.mjs';
 import { enviarAviso } from './correo.mjs';
+import { registrarEvento } from './datos.mjs';
+import { rankingDe, nombreMes, puntuacion } from '../assets/js/objetivos-calculo.js';
 
 const ejecutar = promisify(execFile);
 
@@ -235,6 +237,24 @@ function revisar(datos) {
     if (!Number.isFinite(Number(mod.duracion)) || Number(mod.duracion) <= 0) {
       fallos.push(donde + ' necesita una duración en minutos.');
     }
+    if (mod.video && typeof mod.video === 'object' && mod.video.url !== undefined && mod.video.url !== '' && !texto(mod.video.url)) {
+      fallos.push(donde + ': la dirección del vídeo de presentación no es válida.');
+    }
+    if (mod.examen && typeof mod.examen === 'object') {
+      const aprobado = Number(mod.examen.aprobado);
+      if (mod.examen.aprobado !== undefined && (!Number.isFinite(aprobado) || aprobado < 1 || aprobado > 100)) {
+        fallos.push(donde + ': la nota para aprobar el examen debe estar entre 1 y 100.');
+      }
+      for (const p of mod.examen.preguntas || []) {
+        const dondeP = donde + ', pregunta "' + (p.texto || p.id || 'sin texto') + '"';
+        if (!texto(p.texto)) fallos.push(donde + ' tiene una pregunta del examen sin texto.');
+        const opciones = Array.isArray(p.opciones) ? p.opciones.filter(texto) : [];
+        if (opciones.length < 2) fallos.push(dondeP + ': necesita al menos dos opciones.');
+        if (!Number.isInteger(Number(p.correcta)) || Number(p.correcta) < 0 || Number(p.correcta) >= opciones.length) {
+          fallos.push(dondeP + ': la opción correcta no es válida.');
+        }
+      }
+    }
     if (!Array.isArray(mod.lecciones) || !mod.lecciones.length) {
       fallos.push(donde + ' no tiene ninguna lección.');
       continue;
@@ -244,8 +264,39 @@ function revisar(datos) {
       if (!texto(lec.id) || !texto(lec.titulo)) { fallos.push(donde + ' tiene una lección sin título.'); continue; }
       if (idsLeccion.has(lec.id)) fallos.push(donde + ' tiene dos lecciones con el identificador "' + lec.id + '".');
       idsLeccion.add(lec.id);
-      if (typeof lec.md !== 'string' || !lec.md.trim()) {
-        fallos.push(donde + ', lección "' + lec.titulo + '": el contenido está vacío.');
+      const conVideo = lec.video && typeof lec.video === 'object' && texto(lec.video.url);
+      if (lec.video && typeof lec.video === 'object' && lec.video.url && !conVideo) {
+        fallos.push(donde + ', lección "' + lec.titulo + '": la dirección del vídeo no es válida.');
+      }
+      if (conVideo && lec.video.minutos !== undefined && lec.video.minutos !== '' &&
+          (!Number.isFinite(Number(lec.video.minutos)) || Number(lec.video.minutos) < 0)) {
+        fallos.push(donde + ', lección "' + lec.titulo + '": la duración del vídeo no es válida.');
+      }
+      if ((typeof lec.md !== 'string' || !lec.md.trim()) && !conVideo) {
+        fallos.push(donde + ', lección "' + lec.titulo + '": necesita un vídeo o unos apuntes.');
+      }
+    }
+  }
+
+  if (datos.personas !== undefined) {
+    if (!Array.isArray(datos.personas)) {
+      fallos.push('La lista de personas no es válida.');
+    } else {
+      const correos = new Set();
+      for (const p of datos.personas) {
+        const correo = String(p.correo || '').trim().toLowerCase();
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) {
+          fallos.push('"' + (p.correo || 'sin correo') + '" no parece un correo válido en Personas.');
+          continue;
+        }
+        if (correos.has(correo)) fallos.push('El correo ' + correo + ' está repetido en Personas.');
+        correos.add(correo);
+        if (!texto(p.nombre)) fallos.push('La persona ' + correo + ' no tiene nombre.');
+        if (!['administracion', 'equipo'].includes(p.rol)) fallos.push('El rol de ' + correo + ' no es válido.');
+      }
+      const administradoresActivos = datos.personas.filter((p) => p.rol === 'administracion' && p.activo !== false);
+      if (datos.personas.length && !administradoresActivos.length) {
+        fallos.push('Tiene que quedar al menos una persona activa con rol de administración.');
       }
     }
   }
@@ -286,21 +337,92 @@ function revisar(datos) {
   }
 
   if (datos.objetivos && typeof datos.objetivos === 'object') {
-    for (const [correo, meses] of Object.entries(datos.objetivos)) {
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) {
-        fallos.push('"' + correo + '" no parece un correo válido en los objetivos.');
-        continue;
+    const ob = datos.objetivos;
+    const plantillas = ob.plantillas || {};
+    for (const [pid, p] of Object.entries(plantillas)) {
+      const donde = 'La plantilla de objetivos "' + (p.titulo || pid) + '"';
+      if (!texto(p.titulo)) fallos.push('Hay una plantilla de objetivos sin título.');
+      const ids = new Set();
+      for (const o of p.objetivos || []) {
+        if (!texto(o.texto)) fallos.push(donde + ' tiene un objetivo sin texto.');
+        if (!o.id || !/^[a-z0-9-]+$/.test(o.id) || ids.has(o.id)) fallos.push(donde + ' tiene un objetivo con identificador repetido o no válido.');
+        ids.add(o.id);
+        if (!(Number(o.max) >= 0)) fallos.push(donde + ': la puntuación máxima de "' + (o.texto || o.id) + '" no es válida.');
+        if (o.tipo === 'proporcional' && !(Number(o.meta) > 0)) fallos.push(donde + ': "' + (o.texto || o.id) + '" necesita una meta mayor que cero.');
+        if (o.tipo === 'relativo' && !(p.objetivos || []).some((x) => x.id === o.base)) fallos.push(donde + ': "' + (o.texto || o.id) + '" se calcula sobre un objetivo que no existe.');
+        if (o.tipo === 'relativo' && !(Number(o.proporcion) > 0)) fallos.push(donde + ': "' + (o.texto || o.id) + '" necesita una proporción mayor que cero.');
       }
-      for (const [mes, lista] of Object.entries(meses || {})) {
-        if (!/^\d{4}-\d{2}$/.test(mes)) fallos.push('El mes "' + mes + '" de ' + correo + ' no tiene formato AAAA-MM.');
-        for (const o of lista || []) {
-          if (!texto(o.texto)) fallos.push('Hay un objetivo vacío de ' + correo + ' en ' + mes + '.');
-        }
+    }
+    const idsPersona = new Set();
+    for (const p of ob.personas || []) {
+      if (!texto(p.nombre)) fallos.push('Hay una persona de objetivos sin nombre.');
+      if (!p.id || idsPersona.has(p.id)) fallos.push('La persona de objetivos "' + (p.nombre || '') + '" tiene un identificador repetido o vacío.');
+      idsPersona.add(p.id);
+      if (!plantillas[p.plantilla]) fallos.push((p.nombre || p.id) + ' tiene una plantilla de objetivos que no existe.');
+      if (p.correo && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(p.correo))) fallos.push('El correo de ' + (p.nombre || p.id) + ' en objetivos no es válido.');
+    }
+    for (const [mes, porPersona] of Object.entries(ob.meses || {})) {
+      if (!/^\d{4}-\d{2}$/.test(mes)) fallos.push('El mes "' + mes + '" de objetivos no tiene formato AAAA-MM.');
+      for (const [pid, r] of Object.entries(porPersona || {})) {
+        if (!idsPersona.has(pid)) fallos.push('En objetivos de ' + mes + ' hay resultados de "' + pid + '", que no está dado de alta.');
+        if (r && r.total !== undefined && r.total !== null && r.total !== '' && !(Number(r.total) >= 0)) fallos.push('La puntuación final de "' + pid + '" en ' + mes + ' no es válida.');
       }
     }
   }
 
   return fallos;
+}
+
+/* ── Actividad reciente: lo nuevo que publica el panel ───────── */
+async function anotarActividad(previo, nuevo) {
+  const modulosPrevios = new Map((previo.modulos || []).map((m) => [m.id, m]));
+  for (const mod of nuevo.modulos || []) {
+    const antes = modulosPrevios.get(mod.id);
+    if (!antes) {
+      await registrarEvento({ tipo: 'formacion', texto: 'Nueva formación disponible: «' + mod.titulo + '»', ruta: '#/modulo/' + mod.id, actor: { clave: '', nombre: 'Formación' } });
+      continue;
+    }
+    const leccionesAntes = new Set((antes.lecciones || []).map((l) => l.id));
+    const nuevas = (mod.lecciones || []).filter((l) => !leccionesAntes.has(l.id));
+    if (nuevas.length) {
+      await registrarEvento({ tipo: 'formacion', texto: (nuevas.length === 1 ? 'Nueva lección «' + nuevas[0].titulo + '»' : nuevas.length + ' lecciones nuevas') + ' en «' + mod.titulo + '»', ruta: '#/modulo/' + mod.id, actor: { clave: '', nombre: 'Formación' } });
+    }
+    const videosAntes = new Set((antes.lecciones || []).filter((l) => l.video && l.video.url).map((l) => l.id));
+    const conVideoNuevo = (mod.lecciones || []).filter((l) => l.video && l.video.url && !videosAntes.has(l.id) && leccionesAntes.has(l.id));
+    if (conVideoNuevo.length) {
+      await registrarEvento({ tipo: 'video', texto: 'Vídeo nuevo en «' + mod.titulo + '»: ' + conVideoNuevo.map((l) => l.titulo).join(', '), ruta: '#/modulo/' + mod.id + '/' + conVideoNuevo[0].id, actor: { clave: '', nombre: 'Formación' } });
+    }
+    const examenAntes = antes.examen && (antes.examen.preguntas || []).length;
+    if (!examenAntes && mod.examen && (mod.examen.preguntas || []).length) {
+      await registrarEvento({ tipo: 'examen', texto: 'Ya puedes hacer el examen de «' + mod.titulo + '»', ruta: '#/modulo/' + mod.id, actor: { clave: '', nombre: 'Formación' } });
+    }
+  }
+  const nov = (nuevo.novedades || [])[0];
+  if (nov && !(previo.novedades || []).some((x) => x.fecha === nov.fecha && x.titulo === nov.titulo)) {
+    await registrarEvento({ tipo: 'novedad', texto: 'Nuevo comunicado: «' + nov.titulo + '»', ruta: '#/novedades', actor: { clave: '', nombre: 'Despacho' } });
+  }
+  const edm = ((nuevo.equipo || {}).empleadosDelMes || [])[0];
+  const edmPrevio = ((previo.equipo || {}).empleadosDelMes || [])[0];
+  if (edm && (!edmPrevio || edmPrevio.mes !== edm.mes)) {
+    await registrarEvento({ tipo: 'reconocimiento', texto: edm.nombre + ' es el empleado o empleada del mes', ruta: '#/equipo', actor: { clave: '', nombre: 'Despacho' } });
+  }
+  // Resultados de objetivos: un mes nuevo, o un mes que pasa a tener datos.
+  const mesesAntes = (previo.objetivos && previo.objetivos.meses) || {};
+  const mesesAhora = (nuevo.objetivos && nuevo.objetivos.meses) || {};
+  for (const mes of Object.keys(mesesAhora).sort()) {
+    const ahora = Object.keys(mesesAhora[mes] || {}).length;
+    const antes = Object.keys(mesesAntes[mes] || {}).length;
+    if (!ahora || ahora <= antes) continue;
+    const ranking = rankingDe(nuevo.objetivos, mes);
+    const primero = ranking[0];
+    await registrarEvento({
+      tipo: 'objetivos',
+      texto: 'Publicados los resultados de objetivos de ' + nombreMes(mes) +
+        (primero ? ': ' + primero.persona.nombre + ' encabeza el ranking con ' + puntuacion(primero.total) + ' puntos' : ''),
+      ruta: '#/objetivos',
+      actor: { clave: '', nombre: 'Dirección' }
+    });
+  }
 }
 
 /* ── Avisos por correo al publicar cosas nuevas ──────────────── */
@@ -373,8 +495,10 @@ async function atender(peticion, respuesta) {
     try {
       const previo = await leerTodo();
       const ordenados = await guardarTodo(datos);
-      console.log(`  Guardado: ${ordenados.length} módulos, ${datos.novedades.length} novedades`);
+      console.log(`  Guardado: ${ordenados.length} módulos, ${datos.novedades.length} novedades` +
+        (Array.isArray(datos.personas) ? `, ${datos.personas.length} personas` : ''));
       avisarNovedades(previo, datos);
+      anotarActividad(previo, datos).catch(() => {});
       return json(respuesta, { ok: true, modulos: ordenados.length });
     } catch (e) {
       console.error('  Error al guardar:', e.message);

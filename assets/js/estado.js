@@ -13,7 +13,9 @@ const K = {
   novedades:  PREFIJO + 'novedades.vistas',
   vistos:     PREFIJO + 'vistos',
   objetivos:  PREFIJO + 'objetivos',
-  muroNombre: PREFIJO + 'muro.nombre'
+  muroNombre: PREFIJO + 'muro.nombre',
+  preferencias: PREFIJO + 'preferencias',
+  progresoCopia: PREFIJO + 'progreso.copia'
 };
 
 /* Lectura y escritura tolerantes a fallos (modo privado, cookies
@@ -63,6 +65,13 @@ export const sesion = {
       correo: (usuario && usuario.correo) || '',
       nombre: (usuario && usuario.nombre) || ''
     });
+  },
+
+  /* Cambia el nombre que se muestra sin tocar la caducidad. */
+  renombrar(nombre) {
+    const actual = leer(K.sesion, null);
+    if (!actual || !actual.desde) return;
+    escribir(K.sesion, { ...actual, nombre: String(nombre || '').trim() });
   },
 
   cerrar() {
@@ -145,10 +154,58 @@ export const tema = {
     document.documentElement.setAttribute('data-tema', valor);
     escribir(K.tema, valor);
   },
+  /* Al arrancar: pinta el tema sin fijarlo, para que quien no haya
+     elegido siga al sistema. */
+  iniciar() {
+    document.documentElement.setAttribute('data-tema', this.actual());
+  },
   alternar() {
     const nuevo = this.actual() === 'oscuro' ? 'claro' : 'oscuro';
     this.aplicar(nuevo);
     return nuevo;
+  },
+  /* 'claro' | 'oscuro' si la persona lo fijó; null si sigue al sistema. */
+  guardado() {
+    const g = leer(K.tema, null);
+    return g === 'claro' || g === 'oscuro' ? g : null;
+  },
+  /* Vuelve a seguir al sistema. */
+  restablecer() {
+    borrar(K.tema);
+    document.documentElement.setAttribute('data-tema', this.actual());
+  }
+};
+
+/* ── Preferencias de uso (viven en este navegador) ──────────── */
+const PREFERENCIAS_DEFECTO = {
+  movimiento: 'auto',     // 'auto' | 'menos'
+  letra: 'normal',        // 'normal' | 'grande'
+  avisos: { novedades: true, equipo: true, objetivos: true, modelos: true, conecta: true, actividad: true }
+};
+
+export const preferencias = {
+  todas() {
+    const d = leer(K.preferencias, {}) || {};
+    return {
+      ...PREFERENCIAS_DEFECTO,
+      ...d,
+      avisos: { ...PREFERENCIAS_DEFECTO.avisos, ...(d.avisos || {}) }
+    };
+  },
+  /* fijar('letra', 'grande') o fijar('avisos.conecta', false) */
+  fijar(nombre, valor) {
+    const p = this.todas();
+    if (nombre.startsWith('avisos.')) p.avisos[nombre.slice(7)] = Boolean(valor);
+    else p[nombre] = valor;
+    escribir(K.preferencias, p);
+    this.aplicar();
+    return p;
+  },
+  aplicar() {
+    const p = this.todas();
+    const raiz = document.documentElement;
+    raiz.setAttribute('data-letra', p.letra);
+    raiz.classList.toggle('menos-movimiento', p.movimiento === 'menos');
   }
 };
 
@@ -182,8 +239,42 @@ export const progreso = {
     return claves.reduce((n, c) => n + (actual[c] ? 1 : 0), 0);
   },
 
+  /* Antes de borrar se guarda una copia para poder deshacerlo. */
   reiniciar() {
+    const actual = this.todo();
+    if (Object.keys(actual).length) escribir(K.progresoCopia, { fecha: Date.now(), marcas: actual });
     borrar(K.progreso);
+  },
+
+  hayCopiaReinicio() {
+    const copia = leer(K.progresoCopia, null);
+    return Boolean(copia && copia.marcas && Object.keys(copia.marcas).length);
+  },
+
+  /* Recupera el progreso del último reinicio. Devuelve cuántas
+     lecciones se han recuperado. */
+  deshacerReinicio() {
+    const copia = leer(K.progresoCopia, null);
+    if (!copia || !copia.marcas) return 0;
+    const recuperadas = this.importar(copia.marcas);
+    borrar(K.progresoCopia);
+    return recuperadas;
+  },
+
+  /* Restaura una copia exportada desde «Mi perfil»; se suma a lo
+     que ya hubiera. Devuelve cuántas marcas se han añadido. */
+  importar(datos) {
+    if (!datos || typeof datos !== 'object' || Array.isArray(datos)) return 0;
+    const actual = this.todo();
+    let nuevas = 0;
+    for (const [clave, valor] of Object.entries(datos)) {
+      if (typeof clave !== 'string' || !clave.includes('/')) continue;
+      const marca = Number(valor) || Date.now();
+      if (!actual[clave]) nuevas++;
+      actual[clave] = marca;
+    }
+    escribir(K.progreso, actual);
+    return nuevas;
   }
 };
 

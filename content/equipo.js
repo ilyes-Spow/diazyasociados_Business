@@ -16,7 +16,7 @@ const EQUIPO = {
       mes: '2026-08',
       nombre: 'Nacho',
       iniciales: 'NA',
-      foto: '',
+      foto: 'assets/img/equipo/nacho.jpg',
       motivo: 'Por su constancia y excelente actitud: compañerismo, proactividad y compromiso diario con el equipo. Gracias por su dedicación y por brindar siempre una atención excepcional a los clientes.'
     }
   ],
@@ -31,49 +31,49 @@ const EQUIPO = {
       {
         nombre: 'Nacho',
         iniciales: 'NA',
-        foto: '',
+        foto: 'assets/img/equipo/nacho.jpg',
         puntos: 9.5
       },
       {
         nombre: 'Diego',
         iniciales: 'DI',
-        foto: '',
+        foto: 'assets/img/equipo/diego.jpg',
         puntos: 8.9
       },
       {
         nombre: 'Victor',
         iniciales: 'VI',
-        foto: '',
+        foto: 'assets/img/equipo/victor.jpg',
         puntos: 8.25
       },
       {
         nombre: 'Lucas',
         iniciales: 'LU',
-        foto: '',
+        foto: 'assets/img/equipo/lucas.jpg',
         puntos: 8.17
       },
       {
         nombre: 'Adrian',
         iniciales: 'AD',
-        foto: '',
+        foto: 'assets/img/equipo/adrian.jpg',
         puntos: 6.32
       },
       {
         nombre: 'Alvaro',
         iniciales: 'AL',
-        foto: '',
+        foto: 'assets/img/equipo/alvaro.jpg',
         puntos: 6.13
       },
       {
         nombre: 'Syuzanna',
         iniciales: 'SY',
-        foto: '',
+        foto: 'assets/img/equipo/syuzanna.jpg',
         puntos: 6.06
       },
       {
         nombre: 'Mercedes',
         iniciales: 'ME',
-        foto: '',
+        foto: 'assets/img/equipo/mercedes.jpg',
         puntos: 5.05
       }
     ]

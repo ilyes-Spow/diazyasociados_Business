@@ -6,6 +6,53 @@ export default {
   resumen: 'Quiénes somos, cómo trabajamos y qué se espera de ti durante tus primeras semanas en Díaz y Asociados.',
   duracion: 30,
   etiquetas: ['onboarding', 'obligatorio'],
+  examen: {
+    aprobado: 70,
+    preguntas: [
+      {
+        id: 'areas',
+        texto: '¿Cuáles son las dos grandes áreas del despacho?',
+        opciones: ['Penal y derecho de familia', 'Extranjería y movilidad internacional, y derecho mercantil y corporativo', 'Laboral y fiscal', 'Inmobiliario y seguros'],
+        correcta: 1,
+        explicacion: 'Somos abogados internacionales: extranjería y movilidad internacional, y derecho mercantil y corporativo, con presencia en España, Latinoamérica y Reino Unido.'
+      },
+      {
+        id: 'frase',
+        texto: 'Si tuvieras que quedarte con una sola frase del onboarding, ¿cuál sería?',
+        opciones: ['Vende, factura y cobra', 'Lee, resume y archiva', 'Registra, avisa y pregunta', 'Llama, escribe y espera'],
+        correcta: 2,
+        explicacion: 'Los tres principios del despacho: nada se queda sin registrar, los plazos son sagrados y ante la duda se pregunta.'
+      },
+      {
+        id: 'plazos',
+        texto: 'Conoces hoy una fecha con consecuencias jurídicas para un asunto. ¿Cuándo la anotas en la agenda?',
+        opciones: ['La semana antes de que venza', 'Cuando lo pida el cliente', 'Al cerrar el expediente', 'El mismo día en que se conoce, con recordatorios anticipados'],
+        correcta: 3,
+        explicacion: 'Un plazo perdido rara vez tiene remedio: se anota el mismo día en que se conoce.'
+      },
+      {
+        id: 'chat',
+        texto: 'En el chat interno surge un dato relevante sobre el asunto de un cliente. ¿Qué haces?',
+        opciones: ['Lo dejo en el chat, que queda guardado', 'Lo traslado a la nota del expediente en el CRM', 'Se lo reenvío al cliente por WhatsApp', 'Lo apunto en un papel'],
+        correcta: 1,
+        explicacion: 'El chat se borra; el expediente permanece. La información de un cliente vive en el CRM.'
+      },
+      {
+        id: 'procedimiento',
+        texto: 'Tienes una duda sobre un procedimiento interno. ¿A quién te diriges?',
+        opciones: ['A Administración', 'A Marketing', 'A Coordinación', 'Al cliente'],
+        correcta: 2,
+        explicacion: 'Coordinación resuelve las dudas de procedimiento interno; las dudas jurídicas van al responsable del expediente.'
+      },
+      {
+        id: 'incidencia',
+        texto: 'Un cliente está muy descontento y hay una incidencia grave. ¿Qué haces?',
+        opciones: ['Esperar a la reunión semanal de equipo', 'Comentarlo por escrito en el chat de grupo', 'Avisar a tu responsable directo, de inmediato', 'Resolverlo por tu cuenta sin avisar'],
+        correcta: 2,
+        explicacion: 'Un cliente descontento o una incidencia grave se escala al responsable directo en el momento.'
+      }
+    ]
+  },
   lecciones: [
     {
       id: 'quienes-somos',

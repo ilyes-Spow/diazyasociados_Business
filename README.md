@@ -3,6 +3,10 @@
 Espacio interno del despacho para el onboarding del equipo, la documentación de
 procedimientos y la difusión de novedades sobre las herramientas que utilizamos.
 
+> **Documentación completa y siguientes pasos:** [DOCUMENTACION.md](DOCUMENTACION.md)
+> (qué hace cada pantalla, cómo se usa en el día a día, datos y privacidad,
+> estado de lo que pidió dirección, arquitectura, operación y hoja de ruta).
+
 ---
 
 ## Qué contiene
@@ -30,10 +34,52 @@ procedimientos y normativa.
 - **Diseño adaptable** a móvil, tablet y escritorio.
 - **Impresión** de módulos en formato limpio.
 - **Vídeos** de YouTube, Vimeo, Loom o archivos propios, con carga diferida.
-- **Panel de administración local** para editar contenidos sin tocar código.
-- **Conecta**: la red social interna del despacho. Cada persona publica
-  sugerencias, quejas, ideas y agradecimientos, con fotos y reacciones, en
-  un hilo con scroll infinito donde también aparecen los anuncios oficiales
+- **Mi perfil**: cada persona elige su foto (se ve en Conecta, en «Quién es
+  quién» y en la cabecera), su puesto, sede, idiomas, una frase y su
+  cumpleaños; ajusta tema, tamaño de letra y animaciones; decide qué avisos
+  enciende la campana; y descarga o restaura una copia de su progreso.
+- **Formación en vídeo**: cada lección tiene un vídeo principal (subido a la
+  biblioteca o enlazado de YouTube, Vimeo o Loom) que es lo primero que se ve,
+  con los apuntes debajo. La Videoteca reúne todos los vídeos por módulo.
+- **Panel de administración local** para editar contenidos sin tocar código:
+  resumen con tareas pendientes, módulos y lecciones con el vídeo delante,
+  biblioteca de vídeos con arrastrar y soltar, personas y accesos (quién entra
+  y con qué rol), reconocimientos, objetivos, novedades y modelos.
+- **Exámenes por módulo**: preguntas tipo test al final de cada módulo, que
+  se escriben en el panel («Examen del módulo»). El servidor corrige, guarda
+  cada intento y la persona ve la corrección con la explicación de cada
+  pregunta; puede repetirlo las veces que quiera.
+- **Seguimiento para dirección** (`#/seguimiento`, solo con rol de
+  administración): quién ha completado qué lecciones, qué vídeos ha visto
+  cada persona (con porcentaje y si lo terminó) y los resultados de los
+  exámenes. El progreso de cada persona se guarda en su navegador y, además,
+  en el servidor (`datos/progreso.json`, `visualizaciones.json`,
+  `examenes.json`, fuera de git); al entrar se cruzan las dos copias.
+- **Actividad reciente**: en la portada y en la campana, lo último que pasa
+  en la plataforma (módulos completados, exámenes aprobados, formación
+  nueva publicada desde el panel, publicaciones de Conecta, comunicados,
+  cumpleaños del día). Vive en `datos/actividad.json`.
+- **Soporte informático** (`#/soporte`): cualquiera abre un ticket (qué
+  pasa, tipo, urgencia y detalles) y le llega a informática, que es quien
+  tiene rol de administración. Los tickets pasan por pendiente, en proceso
+  y resuelto, con un hilo de mensajes entre la persona e informática; al
+  resolverse, la persona valora la atención (estrellas, si fue a tiempo y
+  quién la atendió). Cada uno ve solo los suyos; la bandeja de informática
+  los ve todos con tiempos medios y valoración. Avisos en la campana y, si
+  hay `datos/correo.json`, por correo. Los datos viven en
+  `datos/tickets.json`.
+- **Selector de cuentas sin Google**: mientras el acceso con Google no esté
+  configurado, el botón de la pantalla de acceso abre un selector con las
+  personas dadas de alta en el panel (o entra como invitado). Sirve para
+  enseñar la plataforma tal y como la verá cada papel.
+- **Conecta**: la red social interna del despacho, al estilo de una red
+  social de verdad. Cada persona publica sugerencias, ideas, preguntas,
+  agradecimientos, celebraciones, quejas y encuestas, con fotos, #etiquetas
+  y @menciones; los demás reaccionan con seis emojis, responden en hilo y
+  votan en las encuestas. El hilo tiene pestañas (Para ti, Equipo, Oficial,
+  Encuestas), aviso de publicaciones nuevas en directo, tendencias por
+  etiqueta, ranking de los más activos del mes y una «lección sorpresa».
+  También aparecen los anuncios oficiales
   (novedades, tablón, empleado del mes y ranking). Necesita el servidor
   (`npm run dev`); las publicaciones viven en `datos/muro.json` y las fotos
   en `datos/muro-fotos/`, fuera de git. En desarrollo la identidad es
@@ -203,7 +249,7 @@ content/
 ├── curriculo.js          Registro de módulos y bloques temáticos
 ├── novedades.js          Entradas de la sección de Novedades
 ├── equipo.js             Empleado/a del mes y tablón del despacho
-├── objetivos.js          Objetivos mensuales por persona (RRHH)
+├── objetivos.js          Objetivos, metas y resultados por persona
 └── modulos/
     ├── 01-bienvenida.js
     ├── 02-servicios.js
@@ -216,14 +262,31 @@ content/
   **ranking de formación** que publica RRHH y el tablón de anuncios internos
   (eventos, avisos, celebraciones). La campana de la cabecera avisa de lo
   nuevo.
-- `objetivos.js` guarda los **objetivos mensuales que RRHH asigna a cada
-  persona**, ligados al correo de Google con el que entra. Cada empleado ve
-  solo los suyos en la portada y los marca al completarlos (la marca queda
-  en su navegador).
-- Ambos se editan desde el panel de administración (pestañas **Equipo** y
-  **Objetivos**), que también permite subir **fotos del equipo** a
-  `assets/img/equipo/`. El ranking lo publica RRHH a mano: el progreso de
-  cada persona vive en su navegador, así que no puede calcularse solo.
+- `objetivos.js` guarda los **objetivos de cada persona y sus resultados
+  mes a mes**, con la puntuación calculada sola. Tiene tres partes:
+  *plantillas* (la lista de objetivos de cada tipo de puesto, con su máximo
+  y cómo se puntúa), *personas* (quién tiene objetivos, con qué plantilla y
+  sus metas propias) y *meses* (por mes y persona, los resultados reales y
+  los puntos fijados a mano). Los objetivos con meta se puntúan en
+  proporción a lo conseguido, con tope en su máximo (meta 15 reseñas y 14
+  conseguidas: 0,93 sobre 1); los «relativos» se miden sobre otro objetivo
+  (expedientes cerrados sobre clientes captados); el resto los valora
+  dirección. Si dirección publica una nota final distinta de la suma, se
+  escribe en «Puntuación final» y es la que cuenta. El **ranking** del
+  equipo sale solo del último mes publicado (y se pueden ver los meses
+  anteriores), y el acumulado del año es la media de los meses puntuados.
+  Cada persona ve lo suyo en «Mis objetivos» (metas, resultados, puesto y
+  evolución). Quien deja el despacho se marca como baja: conserva su
+  histórico y desaparece de los meses nuevos.
+- El histórico de los Excel de objetivos se vuelca con
+  `node herramientas/importar-objetivos.mjs --carpeta "C:\ruta\con\los\excel"`
+  (un libro «OBJETIVOS NOMBRE.xlsx» por persona, una hoja por mes). Solo
+  lee las columnas de puntuación; los comentarios con nombres de clientes no
+  se tocan.
+- Ambos se editan desde el panel de administración (pestañas
+  **Reconocimientos y tablón** y **Objetivos**), que también permite subir
+  **fotos del equipo** a `assets/img/equipo/`. El ranking manual de
+  `equipo.js` solo se usa mientras no haya resultados de objetivos.
 
 > [!IMPORTANTE] Como todos los contenidos, estos archivos viajan al
 > navegador de todo el equipo: quien sepa mirar puede leer los objetivos de
@@ -339,15 +402,24 @@ cerrada.
 │   └── js/
 │       ├── app.js                 Arranque, enrutador e interfaz
 │       ├── vistas.js              Generación del HTML de cada pantalla
+│       ├── api.js                 Cliente de la API de seguimiento
+│       ├── objetivos-calculo.js   Puntuación de objetivos y ranking
+│       ├── perfiles.js            Perfiles en memoria (fotos, sedes)
 │       ├── buscador.js            Índice y búsqueda
-│       ├── estado.js              Tema y progreso
+│       ├── estado.js              Tema, preferencias y progreso local
+│       ├── iconos.js              Juego de iconos propio
 │       └── markdown.js            Renderizador de Markdown
 ├── content/                       Contenidos editables
+├── datos/                         Datos del servidor (fuera de git)
 └── herramientas/
-    ├── servidor.mjs               Servidor de desarrollo local
+    ├── servidor.mjs               Servidor local: archivos, Conecta, perfiles
+    ├── api.mjs                    API: progreso, vídeos, exámenes, actividad
+    ├── datos.mjs                  Capa de datos (JSON hoy, Supabase mañana)
     ├── admin.mjs                  Panel de administración
     ├── admin/                     Interfaz del panel
     ├── contenido.mjs              Lectura y escritura de content/
+    ├── importar-objetivos.mjs     Vuelca los Excel de objetivos
+    ├── xlsx.mjs                   Lector de .xlsx sin dependencias
     ├── validar.mjs                Comprobación de los contenidos
     └── empaquetar.mjs             Genera la versión en un solo archivo
 ```

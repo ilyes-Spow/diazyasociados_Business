@@ -125,7 +125,9 @@ function dialogoSmtp(config, mensaje) {
 
 /* Envía un aviso a todo el equipo. Nunca lanza: devuelve el
    resultado para que quien llama decida si registrarlo. */
-export async function enviarAviso(asunto, texto) {
+/* destinatarios (opcional): lista de correos que sustituye a la de
+   datos/correo.json, p. ej. para avisar solo a informática. */
+export async function enviarAviso(asunto, texto, destinatarios) {
   const config = await configuracion();
   if (!config) {
     if (!avisadoSinConfig) {
@@ -135,7 +137,8 @@ export async function enviarAviso(asunto, texto) {
     return { enviado: false, motivo: 'sin configuración' };
   }
   try {
-    await dialogoSmtp(config, construirMensaje(config, asunto, texto));
+    const cfg = Array.isArray(destinatarios) && destinatarios.length ? { ...config, destinatarios: destinatarios.map(String) } : config;
+    await dialogoSmtp(cfg, construirMensaje(cfg, asunto, texto));
     console.log('  Aviso enviado por correo: ' + asunto);
     return { enviado: true };
   } catch (e) {

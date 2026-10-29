@@ -7,20 +7,22 @@
    marcas en línea (**negrita**, *cursiva*, `código`, [enlace](url)).
    =============================================================== */
 
+import { ico } from './iconos.js';
+
 const ESCAPES = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
 export const escapar = (t) => String(t).replace(/[&<>"']/g, (c) => ESCAPES[c]);
 
 /* Tipos de llamada disponibles: > [!NOTA] Texto */
 const LLAMADAS = {
-  NOTA:      { clase: 'nota',      titulo: 'Nota',           icono: 'M12 16v-4M12 8h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z' },
-  AVISO:     { clase: 'aviso',     titulo: 'Atención',       icono: 'M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L14.7 3.9a2 2 0 00-3.4 0zM12 9v4M12 17h.01' },
-  IMPORTANTE:{ clase: 'peligro',   titulo: 'Importante',     icono: 'M12 9v4M12 17h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z' },
-  CLAVE:     { clase: 'clave',     titulo: 'Idea clave',     icono: 'M9 18h6M10 22h4M12 2a7 7 0 00-4 12.7V17h8v-2.3A7 7 0 0012 2z' },
-  BUENA:     { clase: 'ok',        titulo: 'Buena práctica', icono: 'M20 6L9 17l-5-5' },
-  PENDIENTE: { clase: 'pendiente', titulo: 'Pendiente de completar', icono: 'M12 8v4l2.5 2.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z' }
+  NOTA:      { clase: 'nota',      titulo: 'Nota',           icono: 'info' },
+  AVISO:     { clase: 'aviso',     titulo: 'Atención',       icono: 'alerta' },
+  IMPORTANTE:{ clase: 'peligro',   titulo: 'Importante',     icono: 'alertaCirculo' },
+  CLAVE:     { clase: 'clave',     titulo: 'Idea clave',     icono: 'bombilla' },
+  BUENA:     { clase: 'ok',        titulo: 'Buena práctica', icono: 'tickCirculo' },
+  PENDIENTE: { clase: 'pendiente', titulo: 'Pendiente de completar', icono: 'relojArena' }
 };
 
-const TICK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>';
+const TICK = ico('tick');
 
 /* Centinela interno para apartar el código en línea del resto de reglas. */
 const SEP = '\uE000';
@@ -79,7 +81,13 @@ export function interpretarVideo(url) {
 function renderVideo(lineas) {
   const url = (lineas[0] || '').trim();
   const titulo = lineas.slice(1).join(' ').trim();
-  const v = interpretarVideo(url);
+  return videoHtml(url, titulo);
+}
+
+/* HTML de un vídeo a partir de su dirección. Lo usan los bloques
+   :::video del Markdown y el vídeo principal de cada lección. */
+export function videoHtml(url, titulo) {
+  const v = interpretarVideo(String(url || '').trim());
   const rotulo = titulo || 'Vídeo de formación';
 
   if (v.tipo === 'enlace') {
@@ -96,8 +104,7 @@ function renderVideo(lineas) {
   return '<figure class="video">' +
     '<button type="button" class="video__portada" data-accion="reproducir" data-src="' +
       escapar(v.src) + '" data-titulo="' + escapar(rotulo) + '">' +
-      '<span class="video__play"><svg viewBox="0 0 24 24" aria-hidden="true">' +
-        '<path d="M7 4.5v15l13-7.5z" fill="currentColor" stroke="none"/></svg></span>' +
+      '<span class="video__play">' + ico('play') + '</span>' +
       '<span class="video__txt">' +
         '<span class="video__tit">' + escapar(rotulo) + '</span>' +
         '<span class="video__nota">Reproducir en ' + escapar(v.proveedor) +
@@ -215,7 +222,7 @@ export function bloques(md) {
         const resto = [tipo[2], ...buf.slice(1)].join('\n').trim();
         salida.push(
           '<div class="llamada llamada--' + cfg.clase + '">' +
-          '<svg class="llamada__ico" viewBox="0 0 24 24" aria-hidden="true"><path d="' + cfg.icono + '"/></svg>' +
+          ico(cfg.icono, 'llamada__ico') +
           '<div class="llamada__txt"><span class="llamada__tit">' + cfg.titulo + '</span>' +
           bloques(resto) + '</div></div>'
         );

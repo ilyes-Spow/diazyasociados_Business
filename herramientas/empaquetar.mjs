@@ -7,7 +7,9 @@
 
    Útil para: enviar la plataforma por correo, llevarla en un USB,
    abrirla a doble clic (el index.html normal necesita servidor
-   porque usa módulos ES) o publicarla como página única.
+   porque usa módulos ES) o publicarla como página única. Sin servidor
+   no hay Conecta, perfiles, exámenes ni seguimiento: el portal lo
+   detecta y sigue funcionando con el progreso local.
    =============================================================== */
 
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
@@ -48,6 +50,7 @@ const ARCHIVOS_MODULOS = [
 
 const piezas = [];
 
+piezas.push(aplanar(leer('assets/js/iconos.js')));
 piezas.push(aplanar(leer('assets/js/markdown.js')));
 
 ARCHIVOS_MODULOS.forEach((archivo, i) => {
@@ -60,9 +63,13 @@ piezas.push(aplanar(leer('content/novedades.js'), 'novedades'));
 piezas.push(aplanar(leer('content/equipo.js'), 'equipo'));
 piezas.push(aplanar(leer('content/objetivos.js'), 'objetivos'));
 piezas.push(aplanar(leer('content/modelos.js'), 'modelos'));
+piezas.push(aplanar(leer('content/personas.js'), 'personas'));
 piezas.push(aplanar(leer('content/administradores.js'), 'administradores'));
 piezas.push(aplanar(leer('assets/js/estado.js')));
+piezas.push(aplanar(leer('assets/js/objetivos-calculo.js')));
 piezas.push(aplanar(leer('assets/js/buscador.js')));
+piezas.push(aplanar(leer('assets/js/perfiles.js')));
+piezas.push(aplanar(leer('assets/js/api.js')));
 piezas.push(aplanar(leer('assets/js/vistas.js')));
 piezas.push(aplanar(leer('assets/js/app.js')));
 
