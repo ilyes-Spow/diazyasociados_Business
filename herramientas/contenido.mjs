@@ -54,18 +54,31 @@ export function serializarModulo(mod) {
 
   const lecciones = (mod.lecciones || []).map((lec) => {
     const cuerpo = String(lec.md || '').replace(/^\n+|\n+$/g, '');
-    return [
+    const lineas = [
       '    {',
       '      id: ' + comillas(lec.id) + ',',
-      '      titulo: ' + comillas(lec.titulo) + ',',
+      '      titulo: ' + comillas(lec.titulo) + ','
+    ];
+    // El vídeo va antes que los apuntes: es lo primero que se ve.
+    if (lec.video && String(lec.video.url || '').trim()) {
+      lineas.push(
+        '      video: {',
+        '        url: ' + comillas(String(lec.video.url).trim()) + ',',
+        '        titulo: ' + comillas(lec.video.titulo || '') + ',',
+        '        minutos: ' + (Number(lec.video.minutos) || 0),
+        '      },'
+      );
+    }
+    lineas.push(
       '      md: `',
       plantilla(cuerpo),
       '`',
       '    }'
-    ].join('\n');
+    );
+    return lineas.join('\n');
   }).join(',\n');
 
-  return [
+  const cabecera = [
     'export default {',
     '  id: ' + comillas(mod.id) + ',',
     '  num: ' + Number(mod.num) + ',',
@@ -73,13 +86,46 @@ export function serializarModulo(mod) {
     '  titulo: ' + comillas(mod.titulo) + ',',
     '  resumen: ' + comillas(mod.resumen) + ',',
     '  duracion: ' + Number(mod.duracion) + ',',
-    '  etiquetas: [' + etiquetas + '],',
+    '  etiquetas: [' + etiquetas + '],'
+  ];
+  // Vídeo de presentación del módulo (opcional).
+  if (mod.video && String(mod.video.url || '').trim()) {
+    cabecera.push(
+      '  video: {',
+      '    url: ' + comillas(String(mod.video.url).trim()) + ',',
+      '    titulo: ' + comillas(mod.video.titulo || '') + ',',
+      '    minutos: ' + (Number(mod.video.minutos) || 0),
+      '  },'
+    );
+  }
+  // Examen del módulo (opcional): preguntas tipo test.
+  if (mod.examen && Array.isArray(mod.examen.preguntas) && mod.examen.preguntas.length) {
+    const preguntas = mod.examen.preguntas.map((p) => [
+      '      {',
+      '        id: ' + comillas(p.id) + ',',
+      '        texto: ' + comillas(p.texto) + ',',
+      '        opciones: [' + (p.opciones || []).map(comillas).join(', ') + '],',
+      '        correcta: ' + (Number(p.correcta) || 0) + ',',
+      '        explicacion: ' + comillas(p.explicacion || ''),
+      '      }'
+    ].join('\n')).join(',\n');
+    cabecera.push(
+      '  examen: {',
+      '    aprobado: ' + (Number(mod.examen.aprobado) || 70) + ',',
+      '    preguntas: [',
+      preguntas,
+      '    ]',
+      '  },'
+    );
+  }
+
+  return cabecera.concat([
     '  lecciones: [',
     lecciones,
     '  ]',
     '};',
     ''
-  ].join('\n');
+  ]).join('\n');
 }
 
 /* ── Escritura de novedades ──────────────────────────────────── */
@@ -186,6 +232,247 @@ export function serializarCurriculo({ version, grupos, modulos }) {
   ].join('\n');
 }
 
+/* ── Escritura de la vida interna (equipo.js) ────────────────── */
+export function serializarEquipo({ empleadosDelMes, tablon, ranking }) {
+  const edm = (empleadosDelMes || []).map((p) => [
+    '    {',
+    '      mes: ' + comillas(p.mes) + ',',
+    '      nombre: ' + comillas(p.nombre) + ',',
+    '      iniciales: ' + comillas(p.iniciales) + ',',
+    '      foto: ' + comillas(p.foto || '') + ',',
+    '      motivo: ' + comillas(p.motivo) + '',
+    '    }'
+  ].join('\n')).join(',\n');
+
+  const anuncios = (tablon || []).map((an) => {
+    const cuerpo = String(an.md || '').replace(/^\n+|\n+$/g, '');
+    return [
+      '    {',
+      '      fecha: ' + comillas(an.fecha) + ',',
+      '      tipo: ' + comillas(an.tipo) + ',',
+      '      titulo: ' + comillas(an.titulo) + ',',
+      '      md: `',
+      plantilla(cuerpo),
+      '`',
+      '    }'
+    ].join('\n');
+  }).join(',\n');
+
+  const r = ranking || { actualizado: '', personas: [] };
+  const personas = (r.personas || []).map((p) => [
+    '      {',
+    '        nombre: ' + comillas(p.nombre) + ',',
+    '        iniciales: ' + comillas(p.iniciales) + ',',
+    '        foto: ' + comillas(p.foto || '') + ',',
+    '        puntos: ' + (Number(p.puntos) || 0),
+    '      }'
+  ].join('\n')).join(',\n');
+
+  return [
+    '/* ===============================================================',
+    '   equipo.js - Vida interna del despacho',
+    '   ---------------------------------------------------------------',
+    '   Este archivo lo mantiene el panel de administración',
+    '   (npm run admin), pero puede editarse a mano sin problema.',
+    "   - empleadosDelMes: el más reciente PRIMERO (mes en AAAA-MM).",
+    "   - tablon: anuncios internos, el más reciente PRIMERO.",
+    "     tipo: 'evento' | 'aviso' | 'celebracion'",
+    '   - ranking: clasificación que publica RRHH periódicamente.',
+    '   =============================================================== */',
+    '',
+    'const EQUIPO = {',
+    '',
+    '  empleadosDelMes: [',
+    edm,
+    '  ],',
+    '',
+    '  tablon: [',
+    anuncios,
+    '  ],',
+    '',
+    '  ranking: {',
+    '    actualizado: ' + comillas(r.actualizado || '') + ',',
+    '    personas: [',
+    personas,
+    '    ]',
+    '  }',
+    '',
+    '};',
+    '',
+    'export default EQUIPO;',
+    ''
+  ].join('\n');
+}
+
+/* ── Objetivos: plantillas, personas, metas y resultados ──────── */
+const TIPOS_OBJETIVO = ['proporcional', 'relativo', 'valoracion'];
+const numeroONulo = (v) => {
+  if (v === undefined || v === null || v === '') return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+};
+
+/* Deja el objeto OBJETIVOS con la forma esperada, venga de donde venga. */
+export function normalizarObjetivos(bruto) {
+  const b = bruto && typeof bruto === 'object' ? bruto : {};
+  const plantillas = {};
+  for (const [id, p] of Object.entries(b.plantillas || {})) {
+    if (!p || typeof p !== 'object') continue;
+    plantillas[id] = {
+      titulo: String(p.titulo || id),
+      objetivos: (Array.isArray(p.objetivos) ? p.objetivos : []).map((o) => {
+        const tipo = TIPOS_OBJETIVO.includes(o.tipo) ? o.tipo : 'valoracion';
+        const obj = { id: String(o.id || ''), texto: String(o.texto || ''), max: numeroONulo(o.max) ?? 0, tipo };
+        if (tipo === 'proporcional') { obj.meta = numeroONulo(o.meta) ?? 0; obj.unidad = String(o.unidad || ''); }
+        if (tipo === 'relativo') { obj.base = String(o.base || ''); obj.proporcion = numeroONulo(o.proporcion) ?? 0; obj.unidad = String(o.unidad || ''); }
+        if (o.extra) obj.extra = true;
+        return obj;
+      })
+    };
+  }
+  const personas = (Array.isArray(b.personas) ? b.personas : []).map((p) => ({
+    id: String(p.id || ''),
+    nombre: String(p.nombre || ''),
+    correo: String(p.correo || '').trim().toLowerCase(),
+    foto: String(p.foto || '').trim(),
+    plantilla: String(p.plantilla || ''),
+    ...(p.baja ? { baja: true } : {}),
+    metas: Object.fromEntries(Object.entries(p.metas || {}).map(([k, v]) => [k, numeroONulo(v)]).filter(([, v]) => v !== null))
+  }));
+  const meses = {};
+  for (const [mes, porPersona] of Object.entries(b.meses || {})) {
+    if (!porPersona || typeof porPersona !== 'object') continue;
+    meses[mes] = {};
+    for (const [personaId, r] of Object.entries(porPersona)) {
+      if (!r || typeof r !== 'object') continue;
+      const limpiar = (mapa) => Object.fromEntries(Object.entries(mapa || {}).map(([k, v]) => [k, numeroONulo(v)]).filter(([, v]) => v !== null));
+      meses[mes][personaId] = { resultados: limpiar(r.resultados), puntos: limpiar(r.puntos) };
+      if (numeroONulo(r.total) !== null) meses[mes][personaId].total = numeroONulo(r.total);
+      if (r.nota) meses[mes][personaId].nota = String(r.nota);
+    }
+  }
+  return { plantillas, personas, meses };
+}
+
+/* Clave de objeto: sin comillas si es un identificador válido. */
+const claveJs = (k) => /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(k) ? k : comillas(k);
+const mapaNumeros = (mapa) => '{ ' + Object.entries(mapa || {}).map(([k, v]) => claveJs(k) + ': ' + Number(v)).join(', ') + ' }';
+
+export function serializarObjetivos(bruto) {
+  const datos = normalizarObjetivos(bruto);
+
+  const plantillas = Object.entries(datos.plantillas).map(([id, p]) => {
+    const objetivos = p.objetivos.map((o) => {
+      const partes = ['id: ' + comillas(o.id), 'texto: ' + comillas(o.texto), 'max: ' + o.max, 'tipo: ' + comillas(o.tipo)];
+      if (o.tipo === 'proporcional') partes.push('meta: ' + o.meta, 'unidad: ' + comillas(o.unidad || ''));
+      if (o.tipo === 'relativo') partes.push('base: ' + comillas(o.base), 'proporcion: ' + o.proporcion, 'unidad: ' + comillas(o.unidad || ''));
+      if (o.extra) partes.push('extra: true');
+      return '        { ' + partes.join(', ') + ' }';
+    }).join(',\n');
+    return '    ' + claveJs(id) + ': {\n      titulo: ' + comillas(p.titulo) + ',\n      objetivos: [\n' + objetivos + '\n      ]\n    }';
+  }).join(',\n');
+
+  const personas = datos.personas.map((p) =>
+    '    { id: ' + comillas(p.id) + ', nombre: ' + comillas(p.nombre) + ', correo: ' + comillas(p.correo) +
+    (p.foto ? ', foto: ' + comillas(p.foto) : '') +
+    ', plantilla: ' + comillas(p.plantilla) + (p.baja ? ', baja: true' : '') + ', metas: ' + mapaNumeros(p.metas) + ' }'
+  ).join(',\n');
+
+  const meses = Object.keys(datos.meses).sort().map((mes) => {
+    const registros = Object.keys(datos.meses[mes]).sort().map((personaId) => {
+      const r = datos.meses[mes][personaId];
+      return '      ' + claveJs(personaId) + ': {\n' +
+        '        resultados: ' + mapaNumeros(r.resultados) + ',\n' +
+        '        puntos: ' + mapaNumeros(r.puntos) +
+        (r.total !== undefined ? ',\n        total: ' + Number(r.total) : '') +
+        (r.nota ? ',\n        nota: ' + comillas(r.nota) : '') + '\n      }';
+    }).join(',\n');
+    return '    ' + comillas(mes) + ': {\n' + registros + '\n    }';
+  }).join(',\n');
+
+  return [
+    '/* ===============================================================',
+    '   objetivos.js - Objetivos, metas y resultados por persona',
+    '   ---------------------------------------------------------------',
+    '   Este archivo lo mantiene el panel de administración',
+    '   (npm run admin); el histórico se puede volcar desde los Excel',
+    '   con herramientas/importar-objetivos.mjs.',
+    '',
+    '   - plantillas: la lista de objetivos de cada tipo de puesto, con',
+    '     su puntuación máxima y cómo se puntúa (proporcional a una meta,',
+    '     proporción sobre otro objetivo o valoración de dirección).',
+    '   - personas: quién tiene objetivos, con qué plantilla y sus metas',
+    '     propias (lo que no se indica usa la meta de la plantilla).',
+    '   - meses: por mes y persona, los resultados reales y los puntos',
+    '     fijados a mano. Lo que no está fijado se calcula solo. Si',
+    '     dirección publicó una puntuación final distinta de la suma,',
+    '     va en `total` y es la que manda en el ranking.',
+    '',
+    '   AVISO: viaja al navegador de todo el equipo. Solo cifras y',
+    '   puntuaciones, nunca comentarios ni datos de clientes.',
+    '   =============================================================== */',
+    '',
+    'const OBJETIVOS = {',
+    '',
+    '  plantillas: {',
+    plantillas,
+    '  },',
+    '',
+    '  personas: [',
+    personas,
+    '  ],',
+    '',
+    '  meses: {',
+    meses,
+    '  }',
+    '',
+    '};',
+    '',
+    'export default OBJETIVOS;',
+    ''
+  ].join('\n');
+}
+
+/* ── Escritura del equipo y los accesos (personas.js) ────────── */
+export function serializarPersonas(lista) {
+  const personas = (lista || []).map((p) => [
+    '  {',
+    '    correo: ' + comillas(String(p.correo || '').trim().toLowerCase()) + ',',
+    '    nombre: ' + comillas(p.nombre || '') + ',',
+    '    puesto: ' + comillas(p.puesto || '') + ',',
+    '    foto: ' + comillas(p.foto || '') + ',',
+    '    rol: ' + comillas(p.rol === 'administracion' ? 'administracion' : 'equipo') + ',',
+    '    activo: ' + (p.activo === false ? 'false' : 'true'),
+    '  }'
+  ].join('\n')).join(',\n');
+
+  return [
+    '/* ===============================================================',
+    '   personas.js - Equipo del despacho y accesos a la plataforma',
+    '   ---------------------------------------------------------------',
+    '   Este archivo lo mantiene el panel de administración',
+    '   (npm run admin, pestaña «Personas y accesos»), pero puede',
+    '   editarse a mano sin problema.',
+    '',
+    '   - correo: la cuenta de Google con la que entra la persona.',
+    "   - rol: 'administracion' (ve el panel y modera Conecta)",
+    "          o 'equipo' (portal completo).",
+    '   - activo: con false la persona deja de poder entrar cuando el',
+    '     acceso con Google esté activo, sin borrar sus datos.',
+    '   - puesto y foto son opcionales; la foto sale de assets/img/equipo/.',
+    '',
+    '   Mientras la lista esté vacía se admite cualquier cuenta.',
+    '   =============================================================== */',
+    '',
+    'const PERSONAS = [',
+    personas,
+    '];',
+    '',
+    'export default PERSONAS;',
+    ''
+  ].join('\n');
+}
+
 /* ── Lectura ─────────────────────────────────────────────────── */
 
 /* Los archivos guardan el texto entre saltos de línea; se retiran
@@ -200,16 +487,84 @@ async function importarFresco(rutaRelativa) {
 
 export async function leerTodo() {
   const curriculo = await importarFresco('content/curriculo.js');
+  // Los módulos se leen archivo a archivo y en fresco: el import de
+  // curriculo.js arrastra sus imports anidados desde la caché de Node,
+  // y tras un guardado devolvería las lecciones antiguas (y un segundo
+  // guardado las pisaría). El orden lo da el número de cada módulo.
+  const archivosModulo = (await readdir(DIR_MODULOS))
+    .filter((a) => /^\d{2}-.+\.js$/.test(a))
+    .sort();
+  const modulosFrescos = [];
+  for (const archivo of archivosModulo) {
+    const mod = (await importarFresco('content/modulos/' + archivo)).default;
+    if (mod && mod.id) modulosFrescos.push(mod);
+  }
+  modulosFrescos.sort((a, b) => (Number(a.num) || 0) - (Number(b.num) || 0));
   const novedades = await importarFresco('content/novedades.js');
+  const equipo = (await importarFresco('content/equipo.js')).default || {};
+  const objetivos = (await importarFresco('content/objetivos.js')).default || {};
+  let personas = [];
+  try {
+    personas = (await importarFresco('content/personas.js')).default || [];
+  } catch (e) {
+    personas = [];
+  }
+
+  const ranking = equipo.ranking || {};
   return {
     version: curriculo.VERSION,
     grupos: curriculo.GRUPOS.map((g) => ({ ...g })),
-    modulos: curriculo.MODULOS.map((m) => ({
+    modulos: modulosFrescos.map((m) => ({
       ...m,
       etiquetas: [...(m.etiquetas || [])],
-      lecciones: m.lecciones.map((l) => ({ id: l.id, titulo: l.titulo, md: recortar(l.md) }))
+      video: m.video && m.video.url
+        ? { url: String(m.video.url), titulo: m.video.titulo || '', minutos: Number(m.video.minutos) || 0 }
+        : null,
+      examen: m.examen && Array.isArray(m.examen.preguntas)
+        ? {
+            aprobado: Number(m.examen.aprobado) || 70,
+            preguntas: m.examen.preguntas.map((p) => ({
+              id: p.id || '', texto: p.texto || '', opciones: [...(p.opciones || [])],
+              correcta: Number(p.correcta) || 0, explicacion: p.explicacion || ''
+            }))
+          }
+        : null,
+      lecciones: m.lecciones.map((l) => ({
+        id: l.id,
+        titulo: l.titulo,
+        video: l.video && l.video.url
+          ? { url: String(l.video.url), titulo: l.video.titulo || '', minutos: Number(l.video.minutos) || 0 }
+          : null,
+        md: recortar(l.md)
+      }))
     })),
-    novedades: novedades.default.map((n) => ({ ...n, etiquetas: [...(n.etiquetas || [])], md: recortar(n.md) }))
+    personas: (Array.isArray(personas) ? personas : []).map((p) => ({
+      correo: String(p.correo || '').toLowerCase(),
+      nombre: p.nombre || '',
+      puesto: p.puesto || '',
+      foto: p.foto || '',
+      rol: p.rol === 'administracion' ? 'administracion' : 'equipo',
+      activo: p.activo !== false
+    })),
+    novedades: novedades.default.map((n) => ({ ...n, etiquetas: [...(n.etiquetas || [])], md: recortar(n.md) })),
+    equipo: {
+      empleadosDelMes: (equipo.empleadosDelMes || []).map((p) => ({
+        mes: p.mes || '', nombre: p.nombre || '', iniciales: p.iniciales || '',
+        foto: p.foto || '', motivo: p.motivo || ''
+      })),
+      tablon: (equipo.tablon || []).map((an) => ({
+        fecha: an.fecha || '', tipo: an.tipo || 'aviso',
+        titulo: an.titulo || '', md: recortar(an.md)
+      })),
+      ranking: {
+        actualizado: ranking.actualizado || '',
+        personas: (ranking.personas || []).map((p) => ({
+          nombre: p.nombre || '', iniciales: p.iniciales || '',
+          foto: p.foto || '', puntos: Number(p.puntos) || 0
+        }))
+      }
+    },
+    objetivos: normalizarObjetivos(objetivos)
   };
 }
 
@@ -239,7 +594,7 @@ async function podarCopias() {
   }
 }
 
-async function escribirAtomico(rutaAbsoluta, contenido) {
+export async function escribirAtomico(rutaAbsoluta, contenido) {
   await respaldar(rutaAbsoluta);
   const temporal = rutaAbsoluta + '.tmp';
   await writeFile(temporal, contenido, 'utf8');
@@ -259,7 +614,7 @@ export function ordenar(grupos, modulos) {
   return ordenados;
 }
 
-export async function guardarTodo({ version, grupos, modulos, novedades }) {
+export async function guardarTodo({ version, grupos, modulos, novedades, equipo, objetivos, personas }) {
   const ordenados = ordenar(grupos, modulos);
   const deseados = new Set(ordenados.map(nombreArchivo));
 
@@ -287,6 +642,15 @@ export async function guardarTodo({ version, grupos, modulos, novedades }) {
     serializarCurriculo({ version, grupos, modulos: ordenados }));
   await escribirAtomico(join(RAIZ, 'content', 'novedades.js'),
     serializarNovedades(novedades));
+  if (equipo) {
+    await escribirAtomico(join(RAIZ, 'content', 'equipo.js'), serializarEquipo(equipo));
+  }
+  if (objetivos) {
+    await escribirAtomico(join(RAIZ, 'content', 'objetivos.js'), serializarObjetivos(objetivos));
+  }
+  if (Array.isArray(personas)) {
+    await escribirAtomico(join(RAIZ, 'content', 'personas.js'), serializarPersonas(personas));
+  }
 
   await podarCopias();
 

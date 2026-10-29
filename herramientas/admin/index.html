@@ -8,49 +8,76 @@
 <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/panel/panel.css">
 </head>
 <body>
 
-<header class="barra">
+<aside class="barra">
   <div class="barra__marca">
-    <img src="/assets/img/logo.svg" alt="" width="30" height="30">
+    <span class="barra__logo"><img src="/assets/img/insignia.jpg" alt="Díaz y Asociados"></span>
     <div>
-      <strong>Panel de contenidos</strong>
-      <small>Díaz y Asociados · formación interna</small>
+      <strong>Panel de administración</strong>
+      <small>Díaz &amp; Asociados</small>
     </div>
   </div>
 
-  <nav class="pestanas" id="pestanas">
-    <button class="pestana pestana--activa" data-vista="modulos">Módulos</button>
-    <button class="pestana" data-vista="novedades">Novedades</button>
-    <button class="pestana" data-vista="videos">Vídeos</button>
-    <button class="pestana" data-vista="grupos">Grupos</button>
-    <button class="pestana" data-vista="ayuda">Ayuda</button>
+  <nav class="menu" id="menu" aria-label="Secciones del panel">
+    <div class="menu__grupo">
+      <button class="pestana pestana--activa" data-vista="inicio" data-ico="inicio"><span>Inicio</span></button>
+    </div>
+    <div class="menu__grupo">
+      <span class="menu__tit">Formación</span>
+      <button class="pestana" data-vista="modulos" data-ico="formacion"><span>Módulos y lecciones</span></button>
+      <button class="pestana" data-vista="videos" data-ico="video"><span>Biblioteca de vídeos</span></button>
+      <button class="pestana" data-vista="grupos" data-ico="capas"><span>Bloques del itinerario</span></button>
+    </div>
+    <div class="menu__grupo">
+      <span class="menu__tit">Equipo</span>
+      <button class="pestana" data-vista="personas" data-ico="usuarios"><span>Personas y accesos</span></button>
+      <button class="pestana" data-vista="equipo" data-ico="trofeo"><span>Reconocimientos y tablón</span></button>
+      <button class="pestana" data-vista="objetivos" data-ico="objetivos"><span>Objetivos del mes</span></button>
+    </div>
+    <div class="menu__grupo">
+      <span class="menu__tit">Comunicación</span>
+      <button class="pestana" data-vista="novedades" data-ico="novedades"><span>Novedades</span></button>
+      <button class="pestana" data-vista="modelos" data-ico="modelos"><span>Modelos de documentos</span></button>
+    </div>
+    <div class="menu__grupo">
+      <button class="pestana" data-vista="ayuda" data-ico="info"><span>Ayuda</span></button>
+    </div>
   </nav>
 
-  <div class="barra__acciones">
+  <div class="barra__pie">
+    <a class="btn btn--sutil barra__portal" href="http://localhost:8099" target="_blank" rel="noopener" data-ico="externo">
+      <span>Ver el portal</span>
+    </a>
     <span class="estado" id="estado-git"></span>
-    <span class="estado estado--cambios" id="estado-cambios" hidden>Sin guardar</span>
-    <button class="btn btn--sutil" id="btn-descartar" hidden>Descartar</button>
-    <button class="btn btn--primario" id="btn-guardar" disabled>Guardar cambios</button>
   </div>
-</header>
+</aside>
 
 <main id="lienzo" class="lienzo">
   <p class="cargando">Cargando contenidos…</p>
 </main>
 
+<!-- Barra fija de guardado: solo aparece cuando hay cambios. -->
+<div class="guardar" id="barra-guardar" hidden>
+  <span class="guardar__txt"><b>Tienes cambios sin guardar.</b> Se escriben en los archivos del proyecto al pulsar Guardar.</span>
+  <button class="btn btn--sutil" id="btn-descartar">Descartar</button>
+  <button class="btn btn--primario" id="btn-guardar" data-ico="guardar"><span>Guardar cambios</span></button>
+</div>
+
 <div class="aviso" id="aviso" role="status" aria-live="polite" hidden></div>
 
 <dialog class="dialogo" id="dialogo">
-  <h2 id="dialogo-tit"></h2>
-  <div id="dialogo-cuerpo"></div>
-  <div class="dialogo__pie">
-    <button class="btn btn--secundario" id="dialogo-no">Cancelar</button>
-    <button class="btn btn--peligro" id="dialogo-si">Confirmar</button>
-  </div>
+  <form method="dialog" id="dialogo-form">
+    <h2 id="dialogo-tit"></h2>
+    <div id="dialogo-cuerpo"></div>
+    <div class="dialogo__pie">
+      <button type="button" class="btn btn--secundario" id="dialogo-no">Cancelar</button>
+      <button type="submit" class="btn btn--primario" id="dialogo-si">Confirmar</button>
+    </div>
+  </form>
 </dialog>
 
 <script type="module" src="/panel/panel.js"></script>

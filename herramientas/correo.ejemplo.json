@@ -1,0 +1,12 @@
+{
+  "_comentario": "Copia este archivo a datos/correo.json y rellenalo. Con Gmail: activa la verificacion en dos pasos de la cuenta y crea una 'contrasena de aplicacion' en myaccount.google.com/apppasswords; esa es la clave que va aqui, no la contrasena normal.",
+  "servidor": "smtp.gmail.com",
+  "puerto": 465,
+  "usuario": "cuenta@gmail.com",
+  "clave": "contrasena-de-aplicacion",
+  "de": "cuenta@gmail.com",
+  "destinatarios": [
+    "persona1@gmail.com",
+    "persona2@gmail.com"
+  ]
+}

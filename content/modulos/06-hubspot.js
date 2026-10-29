@@ -6,10 +6,69 @@ export default {
   resumen: 'Cómo trabajamos en el CRM: contactos, empresas, negocios, tareas y notas. La fuente de verdad del despacho.',
   duracion: 45,
   etiquetas: ['obligatorio', 'herramientas', 'comercial'],
+  examen: {
+    aprobado: 70,
+    preguntas: [
+      {
+        id: 'negocio-nuevo',
+        texto: 'Un cliente antiguo vuelve con un asunto nuevo. ¿Qué haces en HubSpot?',
+        opciones: ['Reabrir el negocio cerrado anterior', 'Crear un negocio nuevo asociado al mismo contacto', 'Crear un contacto nuevo', 'Anotarlo solo en una tarea'],
+        correcta: 1,
+        explicacion: 'Un mismo cliente puede tener varios negocios. No se reutiliza un negocio cerrado: así se conserva el histórico real.'
+      },
+      {
+        id: 'duplicados',
+        texto: 'Antes de crear un contacto, ¿qué hay que hacer siempre?',
+        opciones: ['Pedir permiso a Dirección', 'Crear primero la empresa', 'Buscar por teléfono, por correo y por NIF', 'Nada, se crea directamente'],
+        correcta: 2,
+        explicacion: 'Los duplicados rompen los informes y hacen que un cliente reciba comunicaciones dos veces.'
+      },
+      {
+        id: 'no-va',
+        texto: '¿Qué NO debe escribirse en HubSpot?',
+        opciones: ['El teléfono del contacto', 'La fase del negocio', 'Comentarios personales sobre el cliente', 'Las tareas con fecha'],
+        correcta: 2,
+        explicacion: 'Todo lo que escribas puede ser objeto de un derecho de acceso del propio cliente.'
+      },
+      {
+        id: 'perdido',
+        texto: 'Vas a marcar un negocio como perdido. ¿Qué es imprescindible?',
+        opciones: ['Registrar el motivo real de la pérdida', 'Borrar el negocio', 'Avisar a Marketing', 'Nada, basta con cambiar la fase'],
+        correcta: 0,
+        explicacion: 'Marcar un negocio como perdido sin motivo es peor que no marcarlo: el motivo es la información más valiosa que genera el despacho.'
+      },
+      {
+        id: 'tarea',
+        texto: 'Una nota termina en "hay que hacer algo". ¿Qué la convierte en una tarea de verdad?',
+        opciones: ['Escribirla en mayúsculas', 'Tener fecha y responsable', 'Que la lea Dirección', 'Adjuntar un documento'],
+        correcta: 1,
+        explicacion: 'Sin fecha, no es una tarea: es un deseo. Y si depende de otra persona, se le asigna a esa persona.'
+      },
+      {
+        id: 'rastro',
+        texto: 'Completa la regla práctica: "Si has hablado con un cliente y no queda rastro en HubSpot..."',
+        opciones: ['basta con recordarlo', 'se registra al cerrar el asunto', 'lo anota Coordinación', 'no has hablado con él'],
+        correcta: 3,
+        explicacion: 'Toda llamada, reunión o mensaje relevante deja rastro en el CRM, aunque sea en una nota.'
+      },
+      {
+        id: 'higiene',
+        texto: 'En la revisión semanal del CRM, ¿cuántos días sin actividad son el límite para un negocio abierto?',
+        opciones: ['3 días', '15 días', '60 días', 'Un año'],
+        correcta: 1,
+        explicacion: 'Ningún negocio abierto debe llevar más de 15 días sin actividad registrada.'
+      }
+    ]
+  },
   lecciones: [
     {
       id: 'conceptos',
       titulo: 'Conceptos básicos de HubSpot',
+      video: {
+        url: 'assets/video/hubspot-pantalla-de-inicio.mp4',
+        titulo: 'Un paseo de un minuto por la pantalla de inicio de HubSpot',
+        minutos: 1
+      },
       md: `
 ## Los cuatro objetos que usamos
 

@@ -3,7 +3,9 @@
 Espacio interno del despacho para el onboarding del equipo, la documentación de
 procedimientos y la difusión de novedades sobre las herramientas que utilizamos.
 
-Publicada en **https://formacion-diazyasociados.netlify.app**
+> **Documentación completa y siguientes pasos:** [DOCUMENTACION.md](DOCUMENTACION.md)
+> (qué hace cada pantalla, cómo se usa en el día a día, datos y privacidad,
+> estado de lo que pidió dirección, arquitectura, operación y hoja de ruta).
 
 ---
 
@@ -25,7 +27,6 @@ procedimientos y normativa.
 
 ## Funcionalidades
 
-- **Puerta de acceso** con clave compartida.
 - **Seguimiento del progreso** por persona, guardado en su navegador.
 - **Buscador de texto completo** sobre todos los contenidos, insensible a tildes.
   Se abre con la tecla `/` o con `Ctrl/Cmd + K`.
@@ -33,7 +34,64 @@ procedimientos y normativa.
 - **Diseño adaptable** a móvil, tablet y escritorio.
 - **Impresión** de módulos en formato limpio.
 - **Vídeos** de YouTube, Vimeo, Loom o archivos propios, con carga diferida.
-- **Panel de administración local** para editar contenidos sin tocar código.
+- **Mi perfil**: cada persona elige su foto (se ve en Conecta, en «Quién es
+  quién» y en la cabecera), su puesto, sede, idiomas, una frase y su
+  cumpleaños; ajusta tema, tamaño de letra y animaciones; decide qué avisos
+  enciende la campana; y descarga o restaura una copia de su progreso.
+- **Formación en vídeo**: cada lección tiene un vídeo principal (subido a la
+  biblioteca o enlazado de YouTube, Vimeo o Loom) que es lo primero que se ve,
+  con los apuntes debajo. La Videoteca reúne todos los vídeos por módulo.
+- **Panel de administración local** para editar contenidos sin tocar código:
+  resumen con tareas pendientes, módulos y lecciones con el vídeo delante,
+  biblioteca de vídeos con arrastrar y soltar, personas y accesos (quién entra
+  y con qué rol), reconocimientos, objetivos, novedades y modelos.
+- **Exámenes por módulo**: preguntas tipo test al final de cada módulo, que
+  se escriben en el panel («Examen del módulo»). El servidor corrige, guarda
+  cada intento y la persona ve la corrección con la explicación de cada
+  pregunta; puede repetirlo las veces que quiera.
+- **Seguimiento para dirección** (`#/seguimiento`, solo con rol de
+  administración): quién ha completado qué lecciones, qué vídeos ha visto
+  cada persona (con porcentaje y si lo terminó) y los resultados de los
+  exámenes. El progreso de cada persona se guarda en su navegador y, además,
+  en el servidor (`datos/progreso.json`, `visualizaciones.json`,
+  `examenes.json`, fuera de git); al entrar se cruzan las dos copias.
+- **Actividad reciente**: en la portada y en la campana, lo último que pasa
+  en la plataforma (módulos completados, exámenes aprobados, formación
+  nueva publicada desde el panel, publicaciones de Conecta, comunicados,
+  cumpleaños del día). Vive en `datos/actividad.json`.
+- **Soporte informático** (`#/soporte`): cualquiera abre un ticket (qué
+  pasa, tipo, urgencia y detalles) y le llega a informática, que es quien
+  tiene rol de administración. Los tickets pasan por pendiente, en proceso
+  y resuelto, con un hilo de mensajes entre la persona e informática; al
+  resolverse, la persona valora la atención (estrellas, si fue a tiempo y
+  quién la atendió). Cada uno ve solo los suyos; la bandeja de informática
+  los ve todos con tiempos medios y valoración. Avisos en la campana y, si
+  hay `datos/correo.json`, por correo. Los datos viven en
+  `datos/tickets.json`.
+- **Selector de cuentas sin Google**: mientras el acceso con Google no esté
+  configurado, el botón de la pantalla de acceso abre un selector con las
+  personas dadas de alta en el panel (o entra como invitado). Sirve para
+  enseñar la plataforma tal y como la verá cada papel.
+- **Conecta**: la red social interna del despacho, al estilo de una red
+  social de verdad. Cada persona publica sugerencias, ideas, preguntas,
+  agradecimientos, celebraciones, quejas y encuestas, con fotos, #etiquetas
+  y @menciones; los demás reaccionan con seis emojis, responden en hilo y
+  votan en las encuestas. El hilo tiene pestañas (Para ti, Equipo, Oficial,
+  Encuestas), aviso de publicaciones nuevas en directo, tendencias por
+  etiqueta, ranking de los más activos del mes y una «lección sorpresa».
+  También aparecen los anuncios oficiales
+  (novedades, tablón, empleado del mes y ranking). Necesita el servidor
+  (`npm run dev`); las publicaciones viven en `datos/muro.json` y las fotos
+  en `datos/muro-fotos/`, fuera de git. En desarrollo la identidad es
+  declarativa (el nombre que cada uno pone); cuando se active el acceso con
+  Google, se usará la cuenta. Como en el resto de la plataforma: nunca
+  fotos con clientes ni documentos de asuntos.
+- **Avisos por correo**: cada publicación de Conecta y cada novedad,
+  anuncio, empleado del mes o ranking publicado desde el panel puede
+  avisarse por correo a todo el equipo. Se activa copiando
+  `herramientas/correo.ejemplo.json` a `datos/correo.json` y rellenando la
+  cuenta SMTP (con Gmail: una "contraseña de aplicación") y los
+  destinatarios. Sin ese archivo, los avisos simplemente no se envían.
 
 ---
 
@@ -59,7 +117,6 @@ recargar el navegador tras cada cambio.
 | `npm run admin` | Abre el panel de administración en el puerto 8100 |
 | `npm run validar` | Comprueba que los contenidos están bien formados |
 | `npm run empaquetar` | Genera la versión en un solo archivo |
-| `npm run clave -- "NuevaClave"` | Calcula la huella de una clave nueva |
 
 ### Lo que ya viene configurado
 
@@ -77,81 +134,39 @@ Al abrir la carpeta en VS Code:
 
 ---
 
-## Acceso
+## Acceso con Google
 
-La clave actual es **`Onboarding`** (se admite en mayúsculas o minúsculas).
+La pantalla de entrada pide **acceder con la cuenta de Google** que el
+despacho asigna a cada persona. Funciona con Google Identity Services y se
+configura en tres pasos:
 
-### Cambiar la clave
+1. En [Google Cloud Console](https://console.cloud.google.com/apis/credentials)
+   crea unas credenciales de tipo **ID de cliente de OAuth → Aplicación web**.
+2. En «Orígenes de JavaScript autorizados» añade `http://localhost:8099` y la
+   dirección donde se publique el sitio.
+3. Copia el identificador (termina en `.apps.googleusercontent.com`) en la
+   constante `CLIENTE_GOOGLE` de `assets/js/app.js`.
 
-La plataforma admite dos capas de protección. La primera está siempre activa;
-la segunda es opcional y recomendable.
+Para limitar qué cuentas entran, rellena en el mismo archivo
+`DOMINIO_PERMITIDO` (un dominio propio) o `CORREOS_PERMITIDOS` (lista de
+cuentas concretas).
 
-#### 1. Puerta del navegador (activa por defecto)
+**Mientras `CLIENTE_GOOGLE` esté vacío**, la pantalla se muestra igual pero el
+botón entra directamente, avisando de que la verificación está pendiente.
 
-En `assets/js/app.js` se guarda el SHA-256 de la clave, no la clave en claro.
-Para cambiarla, genera la huella de la nueva clave **en minúsculas**:
+> [!PENDIENTE] Crear el ID de cliente y decidir la lista de cuentas
+> permitidas. Además, esta verificación ocurre en el navegador: disuade, pero
+> los archivos del sitio siguen siendo públicos para quien tenga la dirección.
+> La protección de verdad hay que ponerla en el servidor que lo sirva
+> (por ejemplo Cloudflare Access o Google IAP, ambos con cuentas de Google).
+> Por eso ningún contenido debe incluir datos de clientes.
 
-```bash
-printf '%s' 'nuevaclave' | shasum -a 256
-```
+## Despliegue
 
-y sustituye el valor de la constante `HUELLA_CLAVE`.
+Es un sitio estático sin proceso de compilación: puede servirse desde
+cualquier alojamiento de archivos estáticos.
 
-> Esta capa disuade, pero no es seguridad real: los contenidos viajan al
-> navegador y alguien con conocimientos técnicos puede leerlos sin la clave.
-> Por eso ningún contenido de esta plataforma debe incluir datos de clientes.
-
-#### 2. Puerta en el servidor (recomendada)
-
-El repositorio incluye una función de borde (`netlify/edge-functions/acceso.ts`)
-que valida la clave **antes** de servir nada. Para activarla:
-
-1. En Netlify, ve a **Site configuration → Environment variables**.
-2. Crea la variable `SITE_PASSWORD` con la clave del despacho.
-3. Vuelve a desplegar.
-
-A partir de ese momento nadie recibe el contenido sin haber introducido la
-clave, y la puerta del navegador se salta automáticamente para no pedirla dos
-veces. **Mientras la variable no exista, la función no hace nada.**
-
----
-
-## Desplegar en tu propia cuenta de Netlify
-
-No hay proceso de compilación: es un sitio estático que se sirve tal cual.
-`netlify.toml` ya trae la configuración, así que no hay que rellenar nada.
-
-### Opción A · Arrastrar y soltar (2 minutos, sin GitHub)
-
-1. Descarga el proyecto como ZIP y descomprímelo.
-2. Entra en [app.netlify.com/drop](https://app.netlify.com/drop) con tu cuenta.
-3. Arrastra **la carpeta descomprimida** (no el ZIP).
-4. Netlify te da una dirección del tipo `nombre-aleatorio.netlify.app`.
-5. En **Site configuration → Change site name**, ponle el nombre que quieras.
-
-Para actualizarlo más adelante: **Deploys → Deploy manually** y vuelves a
-arrastrar la carpeta.
-
-### Opción B · Conectado a Git (recomendada a medio plazo)
-
-Cada cambio que subas se publica solo.
-
-1. En Netlify: **Add new site → Import an existing project**.
-2. Elige el proveedor (GitHub, GitLab o Bitbucket) y autoriza tu cuenta.
-3. Selecciona este repositorio y la rama.
-4. Deja el comando de compilación **vacío** y el directorio de publicación
-   en `.` (Netlify lo lee de `netlify.toml`).
-5. **Deploy site**.
-
-Cada `git push` a la rama conectada vuelve a desplegar automáticamente.
-
-### Después de desplegar, en cualquiera de las dos opciones
-
-- **Nombre del sitio**: Site configuration → Change site name.
-- **Dominio propio** (por ejemplo `formacion.diazyasociados.es`):
-  Domain management → Add a domain. El certificado HTTPS es automático.
-- **Clave en servidor** (recomendado): Site configuration →
-  Environment variables → `SITE_PASSWORD`. Ver el apartado de Acceso.
+> [!PENDIENTE] Decidir dónde se publica.
 
 ---
 
@@ -210,7 +225,7 @@ npm run admin          # editar en el navegador y pulsar Guardar
 npm run validar        # comprobar que todo está bien formado
 git diff               # revisar qué ha cambiado exactamente
 git add . && git commit -m "Actualizar el módulo de herencias"
-git push               # Netlify redespliega solo
+git push
 ```
 
 > El panel solo escucha en `127.0.0.1`, así que no es accesible desde la red
@@ -233,11 +248,50 @@ Los contenidos están separados del código, en `content/`.
 content/
 ├── curriculo.js          Registro de módulos y bloques temáticos
 ├── novedades.js          Entradas de la sección de Novedades
+├── equipo.js             Empleado/a del mes y tablón del despacho
+├── objetivos.js          Objetivos, metas y resultados por persona
 └── modulos/
     ├── 01-bienvenida.js
     ├── 02-servicios.js
     └── ...
 ```
+
+### Equipo y objetivos del mes
+
+- `equipo.js` alimenta la sección **Equipo**: empleado/a del mes, el
+  **ranking de formación** que publica RRHH y el tablón de anuncios internos
+  (eventos, avisos, celebraciones). La campana de la cabecera avisa de lo
+  nuevo.
+- `objetivos.js` guarda los **objetivos de cada persona y sus resultados
+  mes a mes**, con la puntuación calculada sola. Tiene tres partes:
+  *plantillas* (la lista de objetivos de cada tipo de puesto, con su máximo
+  y cómo se puntúa), *personas* (quién tiene objetivos, con qué plantilla y
+  sus metas propias) y *meses* (por mes y persona, los resultados reales y
+  los puntos fijados a mano). Los objetivos con meta se puntúan en
+  proporción a lo conseguido, con tope en su máximo (meta 15 reseñas y 14
+  conseguidas: 0,93 sobre 1); los «relativos» se miden sobre otro objetivo
+  (expedientes cerrados sobre clientes captados); el resto los valora
+  dirección. Si dirección publica una nota final distinta de la suma, se
+  escribe en «Puntuación final» y es la que cuenta. El **ranking** del
+  equipo sale solo del último mes publicado (y se pueden ver los meses
+  anteriores), y el acumulado del año es la media de los meses puntuados.
+  Cada persona ve lo suyo en «Mis objetivos» (metas, resultados, puesto y
+  evolución). Quien deja el despacho se marca como baja: conserva su
+  histórico y desaparece de los meses nuevos.
+- El histórico de los Excel de objetivos se vuelca con
+  `node herramientas/importar-objetivos.mjs --carpeta "C:\ruta\con\los\excel"`
+  (un libro «OBJETIVOS NOMBRE.xlsx» por persona, una hoja por mes). Solo
+  lee las columnas de puntuación; los comentarios con nombres de clientes no
+  se tocan.
+- Ambos se editan desde el panel de administración (pestañas
+  **Reconocimientos y tablón** y **Objetivos**), que también permite subir
+  **fotos del equipo** a `assets/img/equipo/`. El ranking manual de
+  `equipo.js` solo se usa mientras no haya resultados de objetivos.
+
+> [!IMPORTANTE] Como todos los contenidos, estos archivos viajan al
+> navegador de todo el equipo: quien sepa mirar puede leer los objetivos de
+> otros. Escribe solo objetivos operativos, nunca valoraciones personales,
+> y pide permiso antes de publicar fotos o datos personales del equipo.
 
 ### Editar una lección
 
@@ -341,8 +395,6 @@ cerrada.
 ```
 .
 ├── index.html                     Estructura de la página
-├── netlify.toml                   Configuración de despliegue y cabeceras
-├── _redirects                     Enrutado del lado del cliente
 ├── robots.txt                     Bloqueo de indexación
 ├── assets/
 │   ├── css/styles.css             Hoja de estilos completa
@@ -350,20 +402,26 @@ cerrada.
 │   └── js/
 │       ├── app.js                 Arranque, enrutador e interfaz
 │       ├── vistas.js              Generación del HTML de cada pantalla
+│       ├── api.js                 Cliente de la API de seguimiento
+│       ├── objetivos-calculo.js   Puntuación de objetivos y ranking
+│       ├── perfiles.js            Perfiles en memoria (fotos, sedes)
 │       ├── buscador.js            Índice y búsqueda
-│       ├── estado.js              Sesión, tema y progreso
+│       ├── estado.js              Tema, preferencias y progreso local
+│       ├── iconos.js              Juego de iconos propio
 │       └── markdown.js            Renderizador de Markdown
 ├── content/                       Contenidos editables
-├── herramientas/
-│   ├── servidor.mjs               Servidor de desarrollo local
-│   ├── admin.mjs                  Panel de administración
-│   ├── admin/                     Interfaz del panel
-│   ├── contenido.mjs              Lectura y escritura de content/
-│   ├── validar.mjs                Comprobación de los contenidos
-│   ├── empaquetar.mjs             Genera la versión en un solo archivo
-│   └── clave.mjs                  Calcula la huella de una clave nueva
-└── netlify/edge-functions/
-    └── acceso.ts                  Puerta de acceso en servidor (opcional)
+├── datos/                         Datos del servidor (fuera de git)
+└── herramientas/
+    ├── servidor.mjs               Servidor local: archivos, Conecta, perfiles
+    ├── api.mjs                    API: progreso, vídeos, exámenes, actividad
+    ├── datos.mjs                  Capa de datos (JSON hoy, Supabase mañana)
+    ├── admin.mjs                  Panel de administración
+    ├── admin/                     Interfaz del panel
+    ├── contenido.mjs              Lectura y escritura de content/
+    ├── importar-objetivos.mjs     Vuelca los Excel de objetivos
+    ├── xlsx.mjs                   Lector de .xlsx sin dependencias
+    ├── validar.mjs                Comprobación de los contenidos
+    └── empaquetar.mjs             Genera la versión en un solo archivo
 ```
 
 Sin dependencias ni proceso de compilación: HTML, CSS y JavaScript nativo con

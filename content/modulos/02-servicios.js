@@ -23,17 +23,36 @@ No necesitas ser experto en todas las áreas. Necesitas saber:
 
 ## Áreas de práctica
 
-> [!PENDIENTE] Sustituir esta tabla por el catálogo real del despacho, con los servicios efectivamente prestados, el responsable de cada área y el rango de honorarios vigente.
+Somos una firma **internacional** con dos grandes áreas, tal como se presentan en la web corporativa:
 
 | Área | Servicios típicos | Perfil de cliente |
 |---|---|---|
-| Derecho civil | Contratos, reclamaciones de cantidad, arrendamientos, responsabilidad civil | Particular y empresa |
-| Derecho de familia | Divorcios, custodias, pensiones, modificación de medidas | Particular |
-| Derecho laboral | Despidos, reclamaciones salariales, incapacidades, asesoramiento a empresa | Particular y empresa |
-| Derecho mercantil | Constitución de sociedades, pactos de socios, contratación mercantil | Empresa y autónomo |
-| Derecho administrativo | Recursos, sanciones, licencias, extranjería | Particular y empresa |
-| Derecho penal | Asistencia al detenido, delitos leves, personación como acusación | Particular |
-| Asesoramiento continuado | Cuota mensual con consultas y revisión de documentación | Empresa y autónomo |
+| Extranjería y movilidad internacional | Residencia, visados, arraigos, renovaciones y TIE, nacionalidad española | Personas, familias, profesionales, estudiantes, inversores y empresas |
+| Derecho mercantil y corporativo | Operaciones internacionales, constitución y gobierno corporativo, contratación, due diligence, protección patrimonial y movilidad de talento | Empresas, inversores y family offices |
+
+> [!PENDIENTE] Completar con el responsable interno de cada área y el rango de honorarios vigente.
+
+## A quién servimos
+
+- **Personas y familias** — residencia, nacionalidad, movilidad y decisiones patrimoniales.
+- **Empresas** — mercantil, corporate, contratación y gobierno corporativo.
+- **Inversores** — estructuras, operaciones, due diligence y activos en España.
+- **Partners** — alianzas con consultoras, asesorías, inmobiliarias, family offices y redes internacionales.
+
+## Presencia internacional
+
+El despacho tiene presencia en **España, Colombia, México, Argentina y Reino Unido**, con web propia por país y oficinas conectadas con clientes globales. Cuando un asunto cruza fronteras, no se improvisa: se coordina con la oficina o el partner correspondiente.
+
+## Nuestra forma de trabajar
+
+Este es el proceso que el despacho comunica públicamente, y el que el cliente espera vivir:
+
+1. **Escuchamos** el caso y entendemos el objetivo.
+2. **Analizamos** la vía legal más adecuada.
+3. **Diseñamos** una estrategia personalizada.
+4. **Preparamos y revisamos** la documentación.
+5. **Acompañamos** durante todo el proceso.
+6. **Mantenemos comunicación** clara y constante.
 
 ## Qué NO hacemos
 
@@ -99,7 +118,7 @@ Debes ser capaz de explicar qué hace el despacho en menos de dos minutos, sin s
 ### 1. Qué problema resolvemos (20 segundos)
 No empieces por "somos un despacho fundado en...". Empieza por el cliente.
 
-> "Trabajamos con personas y empresas que tienen un problema legal y necesitan saber, desde el primer día, qué opciones tienen y cuánto les va a costar."
+> "Acompañamos a personas, familias, empresas e inversores que necesitan vivir, trabajar, invertir o establecerse legalmente en España, y a empresas con proyectos internacionales. Desde el primer día saben qué opciones tienen, qué pasos siguen y cuánto les va a costar."
 
 ### 2. Cómo lo hacemos (40 segundos)
 Aquí sí entran las áreas, pero enfocadas al interlocutor. Si hablas con un autónomo, no le recites derecho de familia.

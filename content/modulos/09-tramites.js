@@ -135,6 +135,22 @@ Este registro es lo que permite acreditar la imposibilidad técnica si hay que a
       id: 'recurrentes',
       titulo: 'Trámites recurrentes del despacho',
       md: `
+## El recorrido tipo de un expediente de extranjería
+
+La web corporativa resume el camino que recorre un expediente de extranjería. Memorízalo: es el mapa sobre el que el cliente te preguntará «¿en qué punto estamos?».
+
+1. Evaluación del caso
+2. Preparación documental
+3. Presentación ante consulado, UGE u Oficina de Extranjería
+4. Resolución
+5. Entrada o estancia en España
+6. Empadronamiento, cuando proceda
+7. Toma de huellas
+8. Recogida de la TIE
+9. Renovación o modificación futura
+
+> [!NOTA] Los **modelos oficiales de extranjería** (solicitudes reguladas por la LO 4/2000) están disponibles para descarga en la web corporativa, y las plantillas internas del despacho en la sección **Modelos** de esta plataforma.
+
 ## Fichas de trámite
 
 Para cada trámite recurrente el despacho mantiene una ficha con: documentación necesaria, plazos, organismo, coste y pasos.
@@ -160,14 +176,16 @@ Para cada trámite recurrente el despacho mantiene una ficha con: documentación
 
 ### Trámites a documentar primero
 
-- [ ] Papeleta de conciliación laboral
-- [ ] Demanda de reclamación de cantidad
-- [ ] Solicitud de medidas provisionales en familia
+Siguiendo las áreas reales del despacho (extranjería y mercantil):
+
+- [ ] Solicitud de residencia (por cada vía habitual del despacho)
+- [ ] Solicitud de visado ante consulado
+- [ ] Arraigo
+- [ ] Renovación de autorización de residencia
+- [ ] Toma de huellas y recogida de TIE
+- [ ] Solicitud de nacionalidad española
 - [ ] Constitución de sociedad limitada
 - [ ] Recurso de reposición administrativo
-- [ ] Solicitud de justicia gratuita
-- [ ] Personación en procedimiento
-- [ ] Solicitud de copia de expediente administrativo
 
 > [!BUENA] Cuando hagas un trámite por primera vez, ve anotando los pasos mientras lo haces. Tardarás cinco minutos más y crearás una ficha que ahorrará horas al resto del equipo.
 

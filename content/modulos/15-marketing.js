@@ -3,14 +3,17 @@ export default {
   num: 15,
   grupo: 'comercial',
   titulo: 'Marketing y comunicación',
-  resumen: 'Cómo se comunica el despacho hacia fuera, con qué límites deontológicos y qué papel tiene cada persona del equipo.',
-  duracion: 30,
+  resumen: 'Cómo se comunica el despacho hacia fuera: parte online, parte offline e imagen de marca. Lo imparte la persona responsable de marketing.',
+  duracion: 45,
   etiquetas: ['comercial', 'marketing'],
   lecciones: [
     {
       id: 'limites',
       titulo: 'Marca y límites deontológicos',
       md: `
+> [!NOTA] Este módulo acompaña a las clases que imparte la persona responsable de marketing del despacho, en sesiones online y presenciales.
+> [!PENDIENTE] Confirmar quién imparte cada sesión y el calendario de las clases.
+
 ## La publicidad de un despacho está regulada
 
 Un despacho puede publicitarse, pero con límites que no aplican a otros sectores. Conocerlos evita sanciones colegiales.
@@ -31,39 +34,26 @@ Un despacho puede publicitarse, pero con límites que no aplican a otros sectore
 - Informar de honorarios y de criterios de facturación.
 
 > [!IMPORTANTE] Un caso "anonimizado" no basta con quitar el nombre. Si la combinación de datos (localidad pequeña, sector, importe, fecha) permite identificar a la persona, sigue siendo un dato personal. Ante la duda, no se publica.
-
-## Identidad del despacho
-
-> [!PENDIENTE] Incorporar el manual de marca: logotipo y sus usos, colores corporativos, tipografías, tono de voz y plantillas oficiales.
-
-Reglas mientras tanto:
-- El logotipo no se modifica, no se deforma ni se recolorea.
-- Las plantillas oficiales no se alteran.
-- La firma de correo es la corporativa, sin frases ni imágenes añadidas.
-
-## Tono de voz
-
-- **Cercano pero profesional.** Se puede tutear en contenido divulgativo, no en comunicaciones formales.
-- **Claro.** Si un texto necesita ser abogado para entenderse, está mal escrito.
-- **Riguroso.** Nada de titulares alarmistas ni de simplificaciones que induzcan a error.
-- **Sin promesas.** Nunca "recupera tu dinero", sino "cómo reclamar y qué plazos tienes".
 `
     },
     {
-      id: 'canales-mkt',
-      titulo: 'Canales y contenidos',
+      id: 'online',
+      titulo: 'Parte online: canales digitales y contenidos',
       md: `
 ## Canales activos
 
-> [!PENDIENTE] Ajustar a los canales realmente gestionados, con el responsable y la frecuencia de publicación de cada uno.
+Los canales que el despacho tiene publicados en su web corporativa:
 
-| Canal | Objetivo | Responsable | Frecuencia |
-|---|---|---|---|
-| Web y blog | Captación orgánica y credibilidad | Marketing | Semanal |
-| Ficha de Google Empresa | Captación local y reseñas | Marketing | Continua |
-| LinkedIn | Marca profesional y empresa | Marketing y equipo | Semanal |
-| Newsletter | Fidelización y reactivación | Marketing | Mensual |
-| Redes sociales generalistas | Notoriedad | Marketing | Según plan |
+| Canal | Objetivo |
+|---|---|
+| Web corporativa (con webs por país: España, Colombia, México, Argentina y UK) | Captación, credibilidad y modelos oficiales descargables |
+| Instagram principal | Notoriedad y cercanía |
+| Instagram internacional | Audiencia fuera de España |
+| TikTok | Divulgación y alcance |
+| LinkedIn | Marca profesional y empresa |
+| Facebook | Comunidad y captación local |
+
+> [!PENDIENTE] Confirmar con la persona de marketing el responsable y la frecuencia de publicación de cada canal, y si además se gestionan ficha de Google Empresa y newsletter.
 
 ## Ideas de contenido que funcionan en un despacho
 
@@ -94,6 +84,66 @@ Las reseñas son el principal factor de decisión en la elección de despacho lo
 - **Nunca** se ofrece contraprestación por una reseña.
 - **Nunca** se escriben reseñas propias ni se piden a personas que no han sido clientes.
 - Se responden todas, positivas y negativas, sin revelar nunca si la persona ha sido cliente.
+`
+    },
+    {
+      id: 'offline',
+      titulo: 'Parte offline: presencia y relaciones',
+      md: `
+## Por qué importa lo offline
+
+En un despacho local, buena parte de los clientes llega por **recomendación y presencia física**: el trato en la oficina, los eventos y las relaciones profesionales pesan tanto como la web.
+
+## Ámbitos de trabajo offline
+
+> [!PENDIENTE] La persona responsable de marketing debe concretar qué acciones offline hace realmente el despacho, con calendario y responsables.
+
+- **Recomendación y boca a boca.** El mejor marketing es un asunto bien llevado y un cliente bien informado. Cada persona del equipo es parte de esto.
+- **Relaciones profesionales.** Colegio de abogados, asociaciones, gestorías, notarías y otros profesionales que derivan casos.
+- **Eventos y charlas.** Jornadas informativas, charlas divulgativas y participación en eventos del sector o del barrio.
+- **Presencia local.** Prensa local, colaboraciones con entidades del entorno y visibilidad del local.
+- **La propia oficina.** La primera impresión al entrar: orden, señalización, material a la vista y trato en recepción.
+
+## El papel del equipo en lo offline
+
+- Trata cada visita a la oficina como una oportunidad de marca: puntualidad, orden y claridad.
+- Si participas en un evento o una charla en nombre del despacho, **coordínalo antes con Marketing**: materiales, mensaje y límites deontológicos.
+- Avisa a Marketing de oportunidades: una asociación que pide una charla, un medio local que busca una fuente, un evento del sector.
+
+> [!AVISO] En eventos y charlas aplican los mismos límites deontológicos que online: nada de datos de clientes, nada de promesas de resultados.
+`
+    },
+    {
+      id: 'marca',
+      titulo: 'Imagen de marca, branding y material',
+      md: `
+## Identidad del despacho
+
+> [!PENDIENTE] Incorporar el manual de marca: logotipo y sus usos, colores corporativos, tipografías, tono de voz y plantillas oficiales. Lo presenta la persona responsable de marketing en su sesión.
+
+Reglas mientras tanto:
+- El logotipo no se modifica, no se deforma ni se recolorea.
+- Las plantillas oficiales no se alteran.
+- La firma de correo es la corporativa, sin frases ni imágenes añadidas.
+
+## Tono de voz
+
+- **Cercano pero profesional.** Se puede tutear en contenido divulgativo, no en comunicaciones formales.
+- **Claro.** Si un texto necesita ser abogado para entenderse, está mal escrito.
+- **Riguroso.** Nada de titulares alarmistas ni de simplificaciones que induzcan a error.
+- **Sin promesas.** Nunca "recupera tu dinero", sino "cómo reclamar y qué plazos tienes".
+
+## Material del despacho
+
+Todo lo que sale del despacho lleva la marca, y por eso se usa el material oficial, nunca versiones propias.
+
+> [!PENDIENTE] Listar el material oficial disponible y dónde se encuentra: plantillas de documentos y presentaciones, papelería, tarjetas, folletos y material para eventos.
+
+- Los **modelos de documentos** oficiales están en la sección Modelos de esta plataforma: descarga siempre la última versión.
+- Si necesitas un material que no existe (una presentación, un folleto, una firma especial), **pídelo a Marketing**: no lo improvises.
+- Antes de imprimir o repartir material, comprueba que es la **versión vigente**.
+
+> [!BUENA] Si detectas material antiguo circulando (un folleto desactualizado, una plantilla vieja), avisa a Marketing para retirarlo.
 `
     },
     {
